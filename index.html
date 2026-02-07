@@ -28,6 +28,11 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .balance-row{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:12px}
 .balance-item{min-width:calc(33% - 10px);flex:1}
 .balance-item .v{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.cur-balance-section{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)}
+.cur-bal-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.cur-bal-label{font-size:12px;color:var(--text2)}
+.cur-bal-spent{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.cur-bal-krw{font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
 
 .today-banner{margin:0 16px 8px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;cursor:pointer}
 .today-banner .v{font-size:15px;font-weight:700}
@@ -42,14 +47,13 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .fl{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600}
 .fi{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:15px;color:var(--text);transition:border-color 0.2s}
 .fi:focus{border-color:var(--accent)}.fi::placeholder{color:#555a6e}
-.frow{display:flex;gap:10px}.frow>.fg{flex:1;min-width:0}
-input[type="date"]{min-width:0;-webkit-min-logical-width:0}
+.frow{display:flex;gap:10px}.frow>.fg{flex:1}
 .chip-group{display:flex;flex-wrap:wrap;gap:6px}
 .chip{padding:7px 14px;border-radius:20px;font-size:13px;font-weight:500;background:var(--surface2);border:1px solid var(--border);cursor:pointer;transition:all 0.15s;white-space:nowrap}
 .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .custom-input-wrap{display:none;margin-top:6px}.custom-input-wrap.show{display:block}
 .time-row{display:flex;gap:6px;align-items:center}
-.time-field{width:48px;padding:10px 4px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:16px;font-weight:600;color:var(--text)}
+.time-field{width:60px;padding:11px 8px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:17px;font-weight:600;color:var(--text)}
 .time-field:focus{border-color:var(--accent)}
 .time-sep{font-size:20px;font-weight:700;color:var(--text2)}
 .amount-wrap{position:relative;display:flex;align-items:center}
@@ -90,6 +94,14 @@ input[type="date"]{min-width:0;-webkit-min-logical-width:0}
 .bd-bar{height:4px;background:var(--surface2);border-radius:2px;margin:2px 0 6px}
 .bd-fill{height:100%;border-radius:2px}
 
+/* Day group */
+.day-header{display:flex;justify-content:space-between;align-items:center;padding:10px 4px 6px;margin-top:8px}
+.day-header:first-child{margin-top:0}
+.day-date{font-size:13px;font-weight:700;color:var(--text)}
+.day-weekday{font-size:11px;color:var(--text2);margin-left:6px}
+.day-subtotal{font-size:12px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.day-count{font-size:10px;color:var(--text2);margin-left:4px}
+
 .entry-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:6px;cursor:pointer;transition:background 0.15s}
 .entry-card:active{background:var(--surface2)}
 .entry-card.checked{opacity:0.5}
@@ -106,6 +118,26 @@ input[type="date"]{min-width:0;-webkit-min-logical-width:0}
 .entry-photo img{width:60px;height:45px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
 .empty-state{text-align:center;padding:40px 20px;color:var(--text2)}
 .empty-state .icon{font-size:48px;margin-bottom:12px}
+
+/* Stats tab */
+.stat-period{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.stat-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:var(--surface2);border:1px solid var(--border);cursor:pointer;color:var(--text2);transition:all 0.15s}
+.stat-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:12px}
+.chart-wrap{position:relative;width:100%}
+.donut-wrap{display:flex;align-items:center;gap:16px}
+.donut-canvas{flex-shrink:0}
+.donut-legend{flex:1;min-width:0}
+.legend-item{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:12px}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:6px}
+.legend-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ccc}
+.legend-val{font-weight:700;font-variant-numeric:tabular-nums;margin-left:8px;white-space:nowrap}
+.trend-canvas{width:100%;height:200px}
+.stat-summary{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.stat-box{flex:1;min-width:calc(33% - 8px);padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center}
+.stat-box .sl{font-size:10px;color:var(--text2)}
+.stat-box .sv{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
 
 .modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);justify-content:center;align-items:flex-end}
 .modal-overlay.open{display:flex}
@@ -145,6 +177,7 @@ input[type="date"]{min-width:0;-webkit-min-logical-width:0}
   <div class="bl">잔액</div>
   <div class="balance-big pos" id="balAmt">₩0</div>
   <div class="balance-row" id="balRow"></div>
+  <div class="cur-balance-section" id="curBalSection"></div>
 </div>
 
 <div class="today-banner" onclick="refreshAll();toast('🔄 새로고침')">
@@ -155,14 +188,15 @@ input[type="date"]{min-width:0;-webkit-min-logical-width:0}
 <div class="tab-nav">
   <div class="tab-btn active" data-tab="input">입력</div>
   <div class="tab-btn" data-tab="list">내역</div>
+  <div class="tab-btn" data-tab="stats">통계</div>
 </div>
 
 <!-- ===== 입력 탭 ===== -->
 <div class="panel active" id="panel-input">
   <div class="fg"><label class="fl">항목 *</label><input class="fi" id="f-title" placeholder="예: 점심 식사, 버스 티켓" autocomplete="off"></div>
-<div class="frow">
-    <div class="fg" style="flex:0 0 42%"><label class="fl">날짜</label><input class="fi" type="date" id="f-date" style="font-size:14px;padding:11px 6px"></div>
-    <div class="fg" style="flex:1"><label class="fl">시간 (24시)</label>
+  <div class="frow">
+    <div class="fg"><label class="fl">날짜</label><input class="fi" type="date" id="f-date"></div>
+    <div class="fg"><label class="fl">시간 (24시)</label>
       <div class="time-row">
         <input class="time-field" id="f-hour" type="number" min="0" max="23" placeholder="00" inputmode="numeric">
         <span class="time-sep">:</span>
@@ -244,6 +278,36 @@ input[type="date"]{min-width:0;-webkit-min-logical-width:0}
   <div id="listContent"></div>
 </div>
 
+<!-- ===== 통계 탭 ===== -->
+<div class="panel" id="panel-stats">
+  <div class="stat-period" id="statPeriod">
+    <div class="stat-chip active" data-range="all">전체</div>
+    <div class="stat-chip" data-range="7">최근 7일</div>
+    <div class="stat-chip" data-range="14">최근 14일</div>
+    <div class="stat-chip" data-range="30">최근 30일</div>
+    <div class="stat-chip" data-range="custom">기간 지정</div>
+  </div>
+  <div id="statCustomRange" style="display:none;margin-bottom:12px">
+    <div class="filter-row">
+      <input class="fi" type="date" id="st-from" style="flex:1">
+      <span style="color:var(--text2);align-self:center;font-size:13px">~</span>
+      <input class="fi" type="date" id="st-to" style="flex:1">
+    </div>
+  </div>
+  <div class="stat-summary" id="statSummary"></div>
+  <div class="chart-card">
+    <div class="chart-title">📊 카테고리별 지출 비율</div>
+    <div class="donut-wrap">
+      <canvas class="donut-canvas" id="donutChart" width="140" height="140"></canvas>
+      <div class="donut-legend" id="donutLegend"></div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">📈 일별 지출 추이</div>
+    <canvas class="trend-canvas" id="trendChart"></canvas>
+  </div>
+</div>
+
 <!-- Edit Modal -->
 <div class="modal-overlay" id="editModal"><div class="modal"><div class="modal-header"><h3>내역 수정</h3><div class="modal-close" onclick="closeModal()">✕</div></div><div id="modalBody"></div></div></div>
 <!-- Settings Modal -->
@@ -269,6 +333,8 @@ const defaultRates={EUR:1500,SEK:140,DKK:210,KRW:1};
 const curSymbols={EUR:'€',SEK:'kr',DKK:'kr',KRW:'₩'};
 const curFlags={EUR:'🇪🇺',SEK:'🇸🇪',DKK:'🇩🇰',KRW:'🇰🇷'};
 const curColorMap={EUR:'var(--orange)',SEK:'var(--green)',DKK:'var(--yellow)',KRW:'var(--purple)'};
+const catIcons={'식사':'🍽','교통':'🚌','선택관광':'🏛','팁':'💵','숙박':'🏨','재무관리':'📊'};
+const chartColors=['#4a9eff','#34d399','#fbbf24','#a78bfa','#f87171','#fb923c','#38bdf8','#e879f9','#f472b6','#6ee7b7'];
 
 const getSettings=()=>{try{const s=JSON.parse(localStorage.getItem(SSK));return{fund:s?.fund||5400000,rates:{...defaultRates,...(s?.rates||{})}};}catch(e){return{fund:5400000,rates:{...defaultRates}};}};
 const setSettings=s=>localStorage.setItem(SSK,JSON.stringify(s));
@@ -280,8 +346,9 @@ const nowTime=()=>{const d=new Date();return{h:d.getHours(),m:d.getMinutes()};};
 const fK=n=>'₩'+Math.round(n).toLocaleString('ko-KR');
 const fCur=(n,cur)=>{const s=curSymbols[cur]||cur+' ';return cur==='KRW'?fK(n):s+Number(n).toLocaleString('ko-KR',{minimumFractionDigits:0,maximumFractionDigits:2});};
 const fD=d=>{if(!d)return'';const t=new Date(d+'T00:00:00');return(t.getMonth()+1)+'/'+t.getDate();};
+const fDFull=d=>{if(!d)return'';const t=new Date(d+'T00:00:00');return(t.getMonth()+1)+'월 '+t.getDate()+'일';};
+const weekdayName=d=>{if(!d)return'';return['일','월','화','수','목','금','토'][new Date(d+'T00:00:00').getDay()];};
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const colors=['#4a9eff','#34d399','#fbbf24','#a78bfa','#f87171','#fb923c','#38bdf8','#e879f9'];
 const getCurColor=c=>curColorMap[c]||'var(--green)';
 const toKRW=(e,s)=>(e.amount||0)*(e.currency==='KRW'?1:(e.rate||s?.rates?.[e.currency]||1));
 
@@ -326,6 +393,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
     refreshAll();
     if(btn.dataset.tab==='list'){updateFilters();renderList();}
+    if(btn.dataset.tab==='stats'){renderStats();}
   });
 });
 
@@ -416,9 +484,7 @@ async function saveEntry(){
   if(pendingPhotoData){photoId=genId()+'_p';try{await savePhotoDB(photoId,pendingPhotoData);}catch(e){console.error(e);}}
   const entry={id:genId(),title,date:document.getElementById('f-date').value,time:getFormTime(),category,currency,amount,rate,payment,memo:document.getElementById('f-memo').value.trim(),photoId,checked:false,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
   const entries=getEntries();entries.push(entry);setEntries(entries);
-  // 새 통화 환율 저장
   if(currency!=='KRW'){s.rates[currency]=rate;setSettings(s);}
-  // 초기화
   document.getElementById('f-title').value='';document.getElementById('f-amount').value='';document.getElementById('f-memo').value='';
   document.querySelectorAll('#f-category .chip,#f-payment .chip').forEach(c=>c.classList.remove('active'));
   document.querySelectorAll('.custom-input-wrap').forEach(w=>w.classList.remove('show'));
@@ -438,13 +504,34 @@ function refreshAll(){
   const bal=s.fund-tConv;
   document.getElementById('balAmt').textContent=fK(bal);
   document.getElementById('balAmt').className='balance-big '+(bal>=0?'pos':'neg');
+  // 기존 통화별 지출
   let rHtml='';
-  ['EUR','SEK','DKK','KRW'].concat(Object.keys(byCur).filter(c=>!['EUR','SEK','DKK','KRW'].includes(c))).forEach(cur=>{
+  const curOrder=['EUR','SEK','DKK','KRW'].concat(Object.keys(byCur).filter(c=>!['EUR','SEK','DKK','KRW'].includes(c)));
+  curOrder.forEach(cur=>{
     if(!byCur[cur])return;
     rHtml+='<div class="balance-item"><div class="bl">'+(curFlags[cur]||'💱')+' '+cur+'</div><div class="v" style="color:'+getCurColor(cur)+'">'+fCur(byCur[cur],cur)+'</div></div>';
   });
   rHtml+='<div class="balance-item"><div class="bl">총 원화환산</div><div class="v">'+fK(tConv)+'</div></div>';
   document.getElementById('balRow').innerHTML=rHtml;
+
+  // 통화별 잔액 요약
+  let cbHtml='';
+  const activeCurs=curOrder.filter(c=>byCur[c]&&c!=='KRW');
+  if(activeCurs.length>0){
+    cbHtml+='<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:4px">통화별 원화환산 내역</div>';
+    activeCurs.forEach(cur=>{
+      const krwVal=byCur[cur]*(s.rates[cur]||1);
+      const pct=tConv>0?(krwVal/tConv*100).toFixed(0):'0';
+      cbHtml+='<div class="cur-bal-row"><span class="cur-bal-label">'+(curFlags[cur]||'💱')+' '+cur+' '+fCur(byCur[cur],cur)+'</span><span class="cur-bal-spent" style="color:'+getCurColor(cur)+'">'+fK(krwVal)+' <span style="font-size:10px;color:var(--text2)">('+pct+'%)</span></span></div>';
+    });
+    if(byCur['KRW']){
+      const pct=tConv>0?(byCur['KRW']/tConv*100).toFixed(0):'0';
+      cbHtml+='<div class="cur-bal-row"><span class="cur-bal-label">🇰🇷 KRW 직접결제</span><span class="cur-bal-spent" style="color:var(--purple)">'+fK(byCur['KRW'])+' <span style="font-size:10px;color:var(--text2)">('+pct+'%)</span></span></div>';
+    }
+  }
+  document.getElementById('curBalSection').innerHTML=cbHtml;
+  document.getElementById('curBalSection').style.display=cbHtml?'':'none';
+
   document.getElementById('todayAmt').textContent=fK(tdConv);
   document.getElementById('todayCount').textContent=tdCnt+'건';
   document.getElementById('todayLabel').textContent=today;
@@ -488,7 +575,7 @@ function renderList(){
   Object.entries(byCur).sort((a,b)=>b[1]-a[1]).forEach(([cur,amt])=>{h+='<div class="summary-item"><div class="sl">'+(curFlags[cur]||'💱')+' '+cur+'</div><div class="sv" style="color:'+getCurColor(cur)+'">'+fCur(amt,cur)+'</div></div>';});
   h+='<div class="summary-item"><div class="sl">원화환산</div><div class="sv">'+fK(sConv)+'</div></div></div>';
   const renderBD=(title,data,offset)=>{const arr=Object.entries(data).sort((a,b)=>b[1]-a[1]);if(arr.length<2)return'';let r='<div class="breakdown"><div class="bd-title">'+title+'</div>';
-    arr.forEach(([k,v],i)=>{const p=sConv>0?(v/sConv*100).toFixed(0):'0';r+='<div class="bd-row"><span class="l">'+esc(k)+'</span><span class="v">'+fK(v)+' ('+p+'%)</span></div><div class="bd-bar"><div class="bd-fill" style="width:'+p+'%;background:'+colors[(i+offset)%colors.length]+'"></div></div>';});return r+'</div>';};
+    arr.forEach(([k,v],i)=>{const p=sConv>0?(v/sConv*100).toFixed(0):'0';r+='<div class="bd-row"><span class="l">'+esc(k)+'</span><span class="v">'+fK(v)+' ('+p+'%)</span></div><div class="bd-bar"><div class="bd-fill" style="width:'+p+'%;background:'+chartColors[(i+offset)%chartColors.length]+'"></div></div>';});return r+'</div>';};
   h+=renderBD('카테고리별',byCat,0)+renderBD('결제수단별',byPay,3)+'</div>';
   document.getElementById('summaryCard').innerHTML=h;
 
@@ -498,17 +585,210 @@ function renderList(){
   const all=getEntries().sort((a,b)=>{const d=(a.date||'').localeCompare(b.date||'');return d!==0?d:(a.time||'').localeCompare(b.time||'');});
   const balMap={};let run=s.fund;all.forEach(e=>{run-=toKRW(e,s);balMap[e.id]=run;});
 
-  container.innerHTML=entries.map(e=>{
-    const cv=toKRW(e,s);
-    let amtH='<span class="entry-amount" style="color:'+getCurColor(e.currency)+'">'+fCur(e.amount,e.currency)+'</span>';
-    if(e.currency!=='KRW')amtH+='<br><span class="entry-sub">= '+fK(cv)+'</span>';
-    return'<div class="entry-card'+(e.checked?' checked':'')+'" onclick="openEdit(\''+e.id+'\')"><div class="entry-top"><div class="entry-title">'+(e.checked?'✅ ':'')+esc(e.title)+'</div><div style="text-align:right">'+amtH+'</div></div><div class="entry-meta"><span class="entry-tag">'+fD(e.date)+' '+(e.time||'')+'</span>'+(e.category?'<span class="entry-tag cat">'+esc(e.category)+'</span>':'')+(e.currency?'<span class="entry-tag cur">'+e.currency+'</span>':'')+(e.payment?'<span class="entry-tag pay">'+esc(e.payment)+'</span>':'')+'</div>'+(e.memo?'<div class="entry-memo">📝 '+esc(e.memo)+'</div>':'')+(e.photoId?'<div class="entry-photo" onclick="event.stopPropagation();viewPhoto(\''+e.photoId+'\')"><img id="thumb_'+e.id+'" data-pid="'+e.photoId+'"></div>':'')+'<div class="entry-balance">잔액 '+fK(balMap[e.id]||0)+'</div></div>';
-  }).join('');
-  // 비동기 썸네일 로드
+  // 일별 그룹핑
+  const groups=[];let curDate=null,curGroup=null;
+  entries.forEach(e=>{
+    if(e.date!==curDate){curDate=e.date;curGroup={date:e.date,items:[],total:0};groups.push(curGroup);}
+    curGroup.items.push(e);curGroup.total+=toKRW(e,s);
+  });
+
+  let listH='';
+  groups.forEach(g=>{
+    const wd=weekdayName(g.date);
+    listH+='<div class="day-header"><div><span class="day-date">'+fDFull(g.date)+'</span><span class="day-weekday">('+wd+')</span></div><div><span class="day-subtotal">'+fK(g.total)+'</span><span class="day-count"> · '+g.items.length+'건</span></div></div>';
+    g.items.forEach(e=>{
+      const cv=toKRW(e,s);
+      let amtH='<span class="entry-amount" style="color:'+getCurColor(e.currency)+'">'+fCur(e.amount,e.currency)+'</span>';
+      if(e.currency!=='KRW')amtH+='<br><span class="entry-sub">= '+fK(cv)+'</span>';
+      listH+='<div class="entry-card'+(e.checked?' checked':'')+'" onclick="openEdit(\''+e.id+'\')"><div class="entry-top"><div class="entry-title">'+(e.checked?'✅ ':'')+esc(e.title)+'</div><div style="text-align:right">'+amtH+'</div></div><div class="entry-meta"><span class="entry-tag">'+(e.time||'')+'</span>'+(e.category?'<span class="entry-tag cat">'+esc(e.category)+'</span>':'')+(e.currency?'<span class="entry-tag cur">'+e.currency+'</span>':'')+(e.payment?'<span class="entry-tag pay">'+esc(e.payment)+'</span>':'')+'</div>'+(e.memo?'<div class="entry-memo">📝 '+esc(e.memo)+'</div>':'')+(e.photoId?'<div class="entry-photo" onclick="event.stopPropagation();viewPhoto(\''+e.photoId+'\')"><img id="thumb_'+e.id+'" data-pid="'+e.photoId+'"></div>':'')+'<div class="entry-balance">잔액 '+fK(balMap[e.id]||0)+'</div></div>';
+    });
+  });
+  container.innerHTML=listH;
   entries.forEach(e=>{if(!e.photoId)return;const el=document.getElementById('thumb_'+e.id);if(el)getPhotoDB(e.photoId).then(d=>{if(d)el.src=d;else el.parentElement.style.display='none';}).catch(()=>{});});
 }
 
 async function viewPhoto(pid){const d=await getPhotoDB(pid);if(!d){toast('사진을 찾을 수 없습니다');return;}document.getElementById('photoViewerImg').src=d;document.getElementById('photoViewer').classList.add('open');}
+
+// ===== Stats Tab =====
+document.querySelectorAll('#statPeriod .stat-chip').forEach(chip=>{
+  chip.addEventListener('click',()=>{
+    document.querySelectorAll('#statPeriod .stat-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    document.getElementById('statCustomRange').style.display=chip.dataset.range==='custom'?'':'none';
+    renderStats();
+  });
+});
+document.getElementById('st-from').addEventListener('change',renderStats);
+document.getElementById('st-to').addEventListener('change',renderStats);
+
+function getStatEntries(){
+  const entries=getEntries(),range=document.querySelector('#statPeriod .stat-chip.active')?.dataset.range||'all';
+  if(range==='all')return entries;
+  if(range==='custom'){
+    const from=document.getElementById('st-from').value,to=document.getElementById('st-to').value;
+    return entries.filter(e=>{if(from&&e.date<from)return false;if(to&&e.date>to)return false;return true;});
+  }
+  const days=parseInt(range);
+  const d=new Date();d.setDate(d.getDate()-days+1);
+  const cutoff=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return entries.filter(e=>e.date>=cutoff);
+}
+
+function renderStats(){
+  const entries=getStatEntries(),s=getSettings();
+  let total=0;const byCat={},byDay={};
+  let minDate='9999',maxDate='0000';
+  entries.forEach(e=>{
+    const cv=toKRW(e,s);total+=cv;
+    byCat[e.category||'미분류']=(byCat[e.category||'미분류']||0)+cv;
+    byDay[e.date||'?']=(byDay[e.date||'?']||0)+cv;
+    if(e.date&&e.date<minDate)minDate=e.date;
+    if(e.date&&e.date>maxDate)maxDate=e.date;
+  });
+
+  // Summary boxes
+  const dayCount=Object.keys(byDay).length;
+  const avgDay=dayCount>0?total/dayCount:0;
+  const maxDay=Object.values(byDay).length?Math.max(...Object.values(byDay)):0;
+  document.getElementById('statSummary').innerHTML=
+    '<div class="stat-box"><div class="sl">총 지출</div><div class="sv">'+fK(total)+'</div></div>'+
+    '<div class="stat-box"><div class="sl">일 평균</div><div class="sv">'+fK(avgDay)+'</div></div>'+
+    '<div class="stat-box"><div class="sl">최고 일지출</div><div class="sv">'+fK(maxDay)+'</div></div>';
+
+  // Donut chart
+  drawDonut(byCat,total);
+  // Trend chart
+  drawTrend(byDay,minDate,maxDate);
+}
+
+function drawDonut(byCat,total){
+  const canvas=document.getElementById('donutChart');
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=140*dpr;canvas.height=140*dpr;
+  canvas.style.width='140px';canvas.style.height='140px';
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,140,140);
+
+  const cx=70,cy=70,outerR=60,innerR=36;
+  const sorted=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+
+  if(!sorted.length){
+    ctx.fillStyle='#2e3345';ctx.beginPath();ctx.arc(cx,cy,outerR,0,Math.PI*2);ctx.arc(cx,cy,innerR,0,Math.PI*2,true);ctx.fill();
+    document.getElementById('donutLegend').innerHTML='<div style="font-size:12px;color:var(--text2);text-align:center;padding:20px">데이터 없음</div>';
+    return;
+  }
+
+  let startAngle=-Math.PI/2;
+  sorted.forEach(([cat,val],i)=>{
+    const sliceAngle=(val/total)*Math.PI*2;
+    ctx.fillStyle=chartColors[i%chartColors.length];
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(startAngle)*innerR,cy+Math.sin(startAngle)*innerR);
+    ctx.arc(cx,cy,outerR,startAngle,startAngle+sliceAngle);
+    ctx.arc(cx,cy,innerR,startAngle+sliceAngle,startAngle,true);
+    ctx.closePath();ctx.fill();
+    startAngle+=sliceAngle;
+  });
+  // Center text
+  ctx.fillStyle='#0f1117';ctx.beginPath();ctx.arc(cx,cy,innerR-1,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='var(--text)';ctx.font='bold 11px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#9498a8';ctx.font='10px -apple-system,sans-serif';ctx.fillText(sorted.length+'개 카테고리',cx,cy-6);
+  ctx.fillStyle='#e8eaf0';ctx.font='bold 13px -apple-system,sans-serif';ctx.fillText(fK(total),cx,cy+8);
+
+  // Legend
+  let legH='';
+  sorted.forEach(([cat,val],i)=>{
+    const pct=total>0?(val/total*100).toFixed(1):'0';
+    legH+='<div class="legend-item"><span class="legend-dot" style="background:'+chartColors[i%chartColors.length]+'"></span><span class="legend-label">'+(catIcons[cat]||'📌')+' '+esc(cat)+'</span><span class="legend-val">'+pct+'%</span></div>';
+  });
+  document.getElementById('donutLegend').innerHTML=legH;
+}
+
+function drawTrend(byDay,minDate,maxDate){
+  const canvas=document.getElementById('trendChart');
+  const rect=canvas.parentElement.getBoundingClientRect();
+  const W=rect.width-32,H=200;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+
+  const days=Object.keys(byDay).sort();
+  if(days.length<1){
+    ctx.fillStyle='#9498a8';ctx.font='13px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('데이터 없음',W/2,H/2);return;
+  }
+
+  // Fill in missing dates
+  const allDates=[];
+  if(days.length>1){
+    const start=new Date(days[0]+'T00:00:00'),end=new Date(days[days.length-1]+'T00:00:00');
+    for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+      allDates.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+    }
+  } else { allDates.push(days[0]); }
+
+  const values=allDates.map(d=>byDay[d]||0);
+  const maxVal=Math.max(...values,1);
+
+  const padL=48,padR=12,padT=20,padB=36;
+  const chartW=W-padL-padR,chartH=H-padT-padB;
+  const barW=Math.min(Math.max(chartW/allDates.length-2,4),30);
+  const gap=(chartW-barW*allDates.length)/Math.max(allDates.length-1,1);
+  const step=barW+Math.max(gap,2);
+
+  // Y axis
+  ctx.fillStyle='#555a6e';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+  for(let i=0;i<=4;i++){
+    const y=padT+chartH*(1-i/4);
+    const val=maxVal*i/4;
+    ctx.fillText(val>=10000?(Math.round(val/1000)+'k'):Math.round(val),padL-6,y);
+    ctx.strokeStyle='#1e2230';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();
+  }
+
+  // Bars
+  allDates.forEach((date,i)=>{
+    const val=byDay[date]||0;
+    const barH=maxVal>0?(val/maxVal)*chartH:0;
+    const x=padL+i*step;
+    const y=padT+chartH-barH;
+
+    // Bar gradient
+    const grad=ctx.createLinearGradient(0,y,0,padT+chartH);
+    grad.addColorStop(0,'#4a9eff');grad.addColorStop(1,'#2a5faf');
+    ctx.fillStyle=val>0?grad:'transparent';
+
+    const radius=Math.min(barW/2,4);
+    if(barH>radius){
+      ctx.beginPath();ctx.moveTo(x,y+radius);ctx.arcTo(x,y,x+barW,y,radius);ctx.arcTo(x+barW,y,x+barW,y+barH,radius);ctx.lineTo(x+barW,padT+chartH);ctx.lineTo(x,padT+chartH);ctx.closePath();ctx.fill();
+    } else if(barH>0){
+      ctx.fillRect(x,y,barW,barH);
+    }
+
+    // X label (show subset)
+    const showLabel=allDates.length<=14||i%Math.ceil(allDates.length/10)===0||i===allDates.length-1;
+    if(showLabel){
+      ctx.fillStyle='#555a6e';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+      ctx.fillText(fD(date),x+barW/2,padT+chartH+6);
+    }
+    // Value on top
+    if(val>0&&(allDates.length<=20||val===maxVal)){
+      ctx.fillStyle='#9498a8';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
+      ctx.fillText(val>=10000?Math.round(val/10000)+'만':val>=1000?Math.round(val/1000)+'k':Math.round(val),x+barW/2,y-3);
+    }
+  });
+
+  // Average line
+  const avg=values.reduce((a,b)=>a+b,0)/values.length;
+  const avgY=padT+chartH*(1-avg/maxVal);
+  ctx.strokeStyle='rgba(248,113,113,0.6)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(padL,avgY);ctx.lineTo(W-padR,avgY);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#f87171';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';
+  ctx.fillText('평균 '+fK(avg),padL+4,avgY-3);
+}
 
 // ===== Edit Modal =====
 let editingId=null,editPhotoData=null;
