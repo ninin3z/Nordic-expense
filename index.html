@@ -132,7 +132,6 @@ input[type="date"]{min-width:0;-webkit-min-logical-width:0}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);padding:10px 20px;background:#333;color:#fff;border-radius:20px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity 0.3s;pointer-events:none}
 .toast.show{opacity:1}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-#f-date{font-size:14px;padding:11px 8px}
 </style>
 </head>
 <body>
@@ -162,8 +161,8 @@ input[type="date"]{min-width:0;-webkit-min-logical-width:0}
 <div class="panel active" id="panel-input">
   <div class="fg"><label class="fl">항목 *</label><input class="fi" id="f-title" placeholder="예: 점심 식사, 버스 티켓" autocomplete="off"></div>
 <div class="frow">
-    <div class="fg"><label class="fl">날짜</label><input class="fi" type="date" id="f-date"></div>
-    <div class="fg"><label class="fl">시간 (24시)</label>
+    <div class="fg" style="flex:0 0 42%"><label class="fl">날짜</label><input class="fi" type="date" id="f-date" style="font-size:14px;padding:11px 6px"></div>
+    <div class="fg" style="flex:1"><label class="fl">시간 (24시)</label>
       <div class="time-row">
         <input class="time-field" id="f-hour" type="number" min="0" max="23" placeholder="00" inputmode="numeric">
         <span class="time-sep">:</span>
