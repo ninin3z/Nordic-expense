@@ -120,9 +120,6 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .empty-state .icon{font-size:48px;margin-bottom:12px}
 
 /* Stats tab */
-.stat-period{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.stat-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:var(--surface2);border:1px solid var(--border);cursor:pointer;color:var(--text2);transition:all 0.15s}
-.stat-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
 .chart-title{font-size:13px;font-weight:700;margin-bottom:12px}
 .chart-wrap{position:relative;width:100%}
@@ -134,10 +131,6 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .legend-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ccc}
 .legend-val{font-weight:700;font-variant-numeric:tabular-nums;margin-left:8px;white-space:nowrap}
 .trend-canvas{width:100%;height:200px}
-.stat-summary{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.stat-box{flex:1;min-width:calc(33% - 8px);padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center}
-.stat-box .sl{font-size:10px;color:var(--text2)}
-.stat-box .sv{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
 
 .modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);justify-content:center;align-items:flex-end}
 .modal-overlay.open{display:flex}
@@ -280,27 +273,30 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
 <!-- ===== 통계 탭 ===== -->
 <div class="panel" id="panel-stats">
-  <div class="stat-period" id="statPeriod">
-    <div class="stat-chip active" data-range="all">전체</div>
-    <div class="stat-chip" data-range="7">최근 7일</div>
-    <div class="stat-chip" data-range="14">최근 14일</div>
-    <div class="stat-chip" data-range="30">최근 30일</div>
-    <div class="stat-chip" data-range="custom">기간 지정</div>
+  <div class="filter-row" style="margin-bottom:10px">
+    <input class="fi" type="date" id="st-from" style="flex:1">
+    <span style="color:var(--text2);align-self:center;font-size:13px">~</span>
+    <input class="fi" type="date" id="st-to" style="flex:1">
+    <button class="btn-sm btn-reset" onclick="document.getElementById('st-from').value='';document.getElementById('st-to').value='';renderStats();" style="white-space:nowrap">↩</button>
   </div>
-  <div id="statCustomRange" style="display:none;margin-bottom:12px">
-    <div class="filter-row">
-      <input class="fi" type="date" id="st-from" style="flex:1">
-      <span style="color:var(--text2);align-self:center;font-size:13px">~</span>
-      <input class="fi" type="date" id="st-to" style="flex:1">
-    </div>
-  </div>
-  <div class="stat-summary" id="statSummary"></div>
+  <div id="statHeader"></div>
   <div class="chart-card">
     <div class="chart-title">📊 카테고리별 지출 비율</div>
     <div class="donut-wrap">
       <canvas class="donut-canvas" id="donutChart" width="140" height="140"></canvas>
       <div class="donut-legend" id="donutLegend"></div>
     </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">💳 결제수단별 비율</div>
+    <div class="donut-wrap">
+      <canvas class="donut-canvas" id="payDonutChart" width="140" height="140"></canvas>
+      <div class="donut-legend" id="payDonutLegend"></div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">💱 통화별 지출</div>
+    <div id="curBreakdown"></div>
   </div>
   <div class="chart-card">
     <div class="chart-title">📈 일별 지출 추이</div>
@@ -610,59 +606,43 @@ function renderList(){
 async function viewPhoto(pid){const d=await getPhotoDB(pid);if(!d){toast('사진을 찾을 수 없습니다');return;}document.getElementById('photoViewerImg').src=d;document.getElementById('photoViewer').classList.add('open');}
 
 // ===== Stats Tab =====
-document.querySelectorAll('#statPeriod .stat-chip').forEach(chip=>{
-  chip.addEventListener('click',()=>{
-    document.querySelectorAll('#statPeriod .stat-chip').forEach(c=>c.classList.remove('active'));
-    chip.classList.add('active');
-    document.getElementById('statCustomRange').style.display=chip.dataset.range==='custom'?'':'none';
-    renderStats();
-  });
-});
 document.getElementById('st-from').addEventListener('change',renderStats);
 document.getElementById('st-to').addEventListener('change',renderStats);
 
 function getStatEntries(){
-  const entries=getEntries(),range=document.querySelector('#statPeriod .stat-chip.active')?.dataset.range||'all';
-  if(range==='all')return entries;
-  if(range==='custom'){
-    const from=document.getElementById('st-from').value,to=document.getElementById('st-to').value;
-    return entries.filter(e=>{if(from&&e.date<from)return false;if(to&&e.date>to)return false;return true;});
-  }
-  const days=parseInt(range);
-  const d=new Date();d.setDate(d.getDate()-days+1);
-  const cutoff=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  return entries.filter(e=>e.date>=cutoff);
+  const entries=getEntries();
+  const from=document.getElementById('st-from').value,to=document.getElementById('st-to').value;
+  return entries.filter(e=>{if(from&&e.date<from)return false;if(to&&e.date>to)return false;return true;});
 }
 
 function renderStats(){
   const entries=getStatEntries(),s=getSettings();
-  let total=0;const byCat={},byDay={};
-  let minDate='9999',maxDate='0000';
+  let total=0;const byCat={},byPay={},byCur={},byDay={};
   entries.forEach(e=>{
     const cv=toKRW(e,s);total+=cv;
     byCat[e.category||'미분류']=(byCat[e.category||'미분류']||0)+cv;
+    byPay[e.payment||'미분류']=(byPay[e.payment||'미분류']||0)+cv;
+    const cur=e.currency||'KRW';byCur[cur]=(byCur[cur]||0)+(e.amount||0);
     byDay[e.date||'?']=(byDay[e.date||'?']||0)+cv;
-    if(e.date&&e.date<minDate)minDate=e.date;
-    if(e.date&&e.date>maxDate)maxDate=e.date;
   });
 
-  // Summary boxes
-  const dayCount=Object.keys(byDay).length;
-  const avgDay=dayCount>0?total/dayCount:0;
-  const maxDay=Object.values(byDay).length?Math.max(...Object.values(byDay)):0;
-  document.getElementById('statSummary').innerHTML=
-    '<div class="stat-box"><div class="sl">총 지출</div><div class="sv">'+fK(total)+'</div></div>'+
-    '<div class="stat-box"><div class="sl">일 평균</div><div class="sv">'+fK(avgDay)+'</div></div>'+
-    '<div class="stat-box"><div class="sl">최고 일지출</div><div class="sv">'+fK(maxDay)+'</div></div>';
+  // Header
+  const from=document.getElementById('st-from').value,to=document.getElementById('st-to').value;
+  const isFiltered=from||to;
+  const label=isFiltered?((from?fD(from):'')+'~'+(to?fD(to):'')):'전체 기간';
+  document.getElementById('statHeader').innerHTML=
+    '<div class="summary-card'+(isFiltered?' filtered':'')+'">'+
+    '<div class="summary-cond">'+(isFiltered?'🔍 ':'')+label+' · '+entries.length+'건</div>'+
+    '<div class="summary-total">'+fK(total)+'</div></div>';
 
-  // Donut chart
-  drawDonut(byCat,total);
-  // Trend chart
-  drawTrend(byDay,minDate,maxDate);
+  drawDonut('donutChart','donutLegend',byCat,total,true);
+  drawDonut('payDonutChart','payDonutLegend',byPay,total,false);
+  renderCurBreakdown(byCur,s,total);
+  drawTrend(byDay);
 }
 
-function drawDonut(byCat,total){
-  const canvas=document.getElementById('donutChart');
+function drawDonut(canvasId,legendId,data,total,useCatIcons){
+  const canvas=document.getElementById(canvasId);
   const ctx=canvas.getContext('2d');
   const dpr=window.devicePixelRatio||1;
   canvas.width=140*dpr;canvas.height=140*dpr;
@@ -671,16 +651,16 @@ function drawDonut(byCat,total){
   ctx.clearRect(0,0,140,140);
 
   const cx=70,cy=70,outerR=60,innerR=36;
-  const sorted=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
 
   if(!sorted.length){
     ctx.fillStyle='#2e3345';ctx.beginPath();ctx.arc(cx,cy,outerR,0,Math.PI*2);ctx.arc(cx,cy,innerR,0,Math.PI*2,true);ctx.fill();
-    document.getElementById('donutLegend').innerHTML='<div style="font-size:12px;color:var(--text2);text-align:center;padding:20px">데이터 없음</div>';
+    document.getElementById(legendId).innerHTML='<div style="font-size:12px;color:var(--text2);text-align:center;padding:20px">데이터 없음</div>';
     return;
   }
 
   let startAngle=-Math.PI/2;
-  sorted.forEach(([cat,val],i)=>{
+  sorted.forEach(([k,val],i)=>{
     const sliceAngle=(val/total)*Math.PI*2;
     ctx.fillStyle=chartColors[i%chartColors.length];
     ctx.beginPath();
@@ -690,22 +670,36 @@ function drawDonut(byCat,total){
     ctx.closePath();ctx.fill();
     startAngle+=sliceAngle;
   });
-  // Center text
   ctx.fillStyle='#0f1117';ctx.beginPath();ctx.arc(cx,cy,innerR-1,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='var(--text)';ctx.font='bold 11px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillStyle='#9498a8';ctx.font='10px -apple-system,sans-serif';ctx.fillText(sorted.length+'개 카테고리',cx,cy-6);
-  ctx.fillStyle='#e8eaf0';ctx.font='bold 13px -apple-system,sans-serif';ctx.fillText(fK(total),cx,cy+8);
+  ctx.fillStyle='#9498a8';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(sorted.length+'개',cx,cy-6);
+  ctx.fillStyle='#e8eaf0';ctx.font='bold 12px -apple-system,sans-serif';
+  ctx.fillText(fK(total),cx,cy+8);
 
-  // Legend
   let legH='';
-  sorted.forEach(([cat,val],i)=>{
+  sorted.forEach(([k,val],i)=>{
     const pct=total>0?(val/total*100).toFixed(1):'0';
-    legH+='<div class="legend-item"><span class="legend-dot" style="background:'+chartColors[i%chartColors.length]+'"></span><span class="legend-label">'+(catIcons[cat]||'📌')+' '+esc(cat)+'</span><span class="legend-val">'+pct+'%</span></div>';
+    const icon=useCatIcons?(catIcons[k]||'📌'):'';
+    legH+='<div class="legend-item"><span class="legend-dot" style="background:'+chartColors[i%chartColors.length]+'"></span><span class="legend-label">'+icon+(icon?' ':'')+esc(k)+'</span><span class="legend-val">'+pct+'%</span></div>';
   });
-  document.getElementById('donutLegend').innerHTML=legH;
+  document.getElementById(legendId).innerHTML=legH;
 }
 
-function drawTrend(byDay,minDate,maxDate){
+function renderCurBreakdown(byCur,s,total){
+  const sorted=Object.entries(byCur).sort((a,b)=>{
+    const aK=a[1]*(s.rates[a[0]]||1),bK=b[1]*(s.rates[b[0]]||1);return bK-aK;
+  });
+  if(!sorted.length){document.getElementById('curBreakdown').innerHTML='<div style="font-size:12px;color:var(--text2);text-align:center;padding:20px">데이터 없음</div>';return;}
+  let h='';
+  sorted.forEach(([cur,amt],i)=>{
+    const krwVal=amt*(cur==='KRW'?1:(s.rates[cur]||1));
+    const pct=total>0?(krwVal/total*100).toFixed(0):'0';
+    h+='<div class="bd-row"><span class="l">'+(curFlags[cur]||'💱')+' '+cur+' '+fCur(amt,cur)+'</span><span class="v" style="color:'+getCurColor(cur)+'">'+fK(krwVal)+' ('+pct+'%)</span></div><div class="bd-bar"><div class="bd-fill" style="width:'+pct+'%;background:'+getCurColor(cur)+'"></div></div>';
+  });
+  document.getElementById('curBreakdown').innerHTML=h;
+}
+
+function drawTrend(byDay){
   const canvas=document.getElementById('trendChart');
   const rect=canvas.parentElement.getBoundingClientRect();
   const W=rect.width-32,H=200;
