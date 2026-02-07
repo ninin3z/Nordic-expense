@@ -210,7 +210,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   <div class="fg">
     <label class="fl">📷 영수증</label>
     <div class="photo-area">
-      <label class="photo-btn"><span>📸 사진 첨부</span><input type="file" accept="image/*" capture="environment" id="f-photo" style="display:none" onchange="handlePhoto(this)"></label>
+      <label class="photo-btn"><span>📸 사진 첨부</span><input type="file" accept="image/*" id="f-photo" style="display:none" onchange="handlePhoto(this)"></label>
       <div class="photo-preview" id="photoPreview"><img id="photoThumb"><div class="photo-remove" onclick="removePhoto()">✕</div></div>
     </div>
   </div>
@@ -512,7 +512,7 @@ async function viewPhoto(pid){const d=await getPhotoDB(pid);if(!d){toast('사진
 // ===== Edit Modal =====
 let editingId=null,editPhotoData=null;
 function openEdit(id){
-  editingId=id;editPhotoData=null;const e=getEntries().find(x=>x.id===id);if(!e)return;
+  editingId=id;editPhotoData=null;editDeletePhoto=false;const e=getEntries().find(x=>x.id===id);if(!e)return;
   const[eh,em]=(e.time||'00:00').split(':');
   const allCats=new Set(['식사','교통','선택관광','팁','숙박','재무관리','기타']);
   const allCurs=new Set(['EUR','SEK','DKK','KRW']);
@@ -529,19 +529,21 @@ function openEdit(id){
     '<div class="fg"><label class="fl">환율</label><input class="fi" type="number" id="e-rate" value="'+(e.rate||'')+'" step="0.01" inputmode="decimal"></div></div>'+
     '<div class="fg"><label class="fl">결제수단</label><select class="fi" id="e-pay"><option value="">선택</option>'+opts(allPays,e.payment)+'</select></div>'+
     '<div class="fg"><label class="fl">메모</label><textarea class="fi" id="e-memo" rows="2">'+esc(e.memo||'')+'</textarea></div>'+
-    '<div class="fg"><label class="fl">📷 영수증</label><div id="editPhotoArea"></div><label class="photo-btn" style="margin-top:6px"><span>📸 사진 변경</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleEditPhoto(this)"></label></div>'+
+    '<div class="fg"><label class="fl">📷 영수증</label><div id="editPhotoArea"></div><div style="display:flex;gap:8px;margin-top:6px"><label class="photo-btn"><span>📸 사진 변경</span><input type="file" accept="image/*" style="display:none" onchange="handleEditPhoto(this)"></label><button class="photo-btn" onclick="removeEditPhoto()" id="editPhotoDelBtn" style="display:none;color:var(--red)">🗑 사진 삭제</button></div></div>'+
     '<div class="fg" style="display:flex;align-items:center;gap:10px;margin-top:4px"><input type="checkbox" id="e-checked" '+(e.checked?'checked':'')+' style="width:20px;height:20px;accent-color:var(--accent)"><label for="e-checked" style="font-size:14px">확인 완료</label></div>'+
     '<div class="modal-actions"><button class="btn-delete" onclick="deleteEntry()">삭제</button><button class="btn-save" onclick="updateEntry()">저장</button></div>';
-  if(e.photoId){getPhotoDB(e.photoId).then(d=>{if(d)document.getElementById('editPhotoArea').innerHTML='<img src="'+d+'" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer" onclick="viewPhoto(\''+e.photoId+'\')">';});}
+  if(e.photoId){getPhotoDB(e.photoId).then(d=>{if(d){document.getElementById('editPhotoArea').innerHTML='<img src="'+d+'" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer" onclick="viewPhoto(\''+e.photoId+'\')">';document.getElementById('editPhotoDelBtn').style.display='';}});}
   document.getElementById('editModal').classList.add('open');
 }
+let editDeletePhoto=false;
+function removeEditPhoto(){editDeletePhoto=true;editPhotoData=null;document.getElementById('editPhotoArea').innerHTML='<span style="font-size:12px;color:var(--text2)">사진 삭제됨 (저장 시 반영)</span>';document.getElementById('editPhotoDelBtn').style.display='none';}
 function handleEditPhoto(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();reader.onload=function(ev){
-    const img=new Image();img.onload=function(){const c=document.createElement('canvas');const maxW=800;let w=img.width,h=img.height;if(w>maxW){h=Math.round(h*(maxW/w));w=maxW;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);editPhotoData=c.toDataURL('image/jpeg',0.7);document.getElementById('editPhotoArea').innerHTML='<img src="'+editPhotoData+'" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';};img.src=ev.target.result;
+    const img=new Image();img.onload=function(){const c=document.createElement('canvas');const maxW=800;let w=img.width,h=img.height;if(w>maxW){h=Math.round(h*(maxW/w));w=maxW;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);editPhotoData=c.toDataURL('image/jpeg',0.7);editDeletePhoto=false;document.getElementById('editPhotoArea').innerHTML='<img src="'+editPhotoData+'" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';document.getElementById('editPhotoDelBtn').style.display='';};img.src=ev.target.result;
   };reader.readAsDataURL(file);
 }
-function closeModal(){document.getElementById('editModal').classList.remove('open');editingId=null;editPhotoData=null;}
+function closeModal(){document.getElementById('editModal').classList.remove('open');editingId=null;editPhotoData=null;editDeletePhoto=false;}
 async function updateEntry(){
   if(!editingId)return;const entries=getEntries();const idx=entries.findIndex(x=>x.id===editingId);if(idx===-1)return;
   const h=String(parseInt(document.getElementById('e-hour').value)||0).padStart(2,'0');
@@ -549,6 +551,7 @@ async function updateEntry(){
   const cur=document.getElementById('e-cur').value;
   let photoId=entries[idx].photoId;
   if(editPhotoData){if(photoId)try{await deletePhotoDB(photoId);}catch(e){}photoId=genId()+'_p';try{await savePhotoDB(photoId,editPhotoData);}catch(e){}}
+  else if(editDeletePhoto){if(photoId)try{await deletePhotoDB(photoId);}catch(e){}photoId=null;}
   entries[idx]={...entries[idx],title:document.getElementById('e-title').value.trim(),date:document.getElementById('e-date').value,time:h+':'+m,category:document.getElementById('e-cat').value,currency:cur,amount:parseFloat(document.getElementById('e-amount').value)||0,rate:cur==='KRW'?1:(parseFloat(document.getElementById('e-rate').value)||1),payment:document.getElementById('e-pay').value,memo:document.getElementById('e-memo').value.trim(),photoId,checked:document.getElementById('e-checked').checked,updatedAt:new Date().toISOString()};
   setEntries(entries);closeModal();refreshAll();renderList();toast('✅ 수정됨');
 }
