@@ -236,6 +236,13 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   </div>
   <div class="fg"><label class="fl">메모</label><textarea class="fi" id="f-memo" rows="2" placeholder="비고 사항"></textarea></div>
   <div class="fg">
+    <label class="fl">📍 장소</label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input class="fi" id="f-location" placeholder="도시명 (자동 또는 수동 입력)" style="flex:1">
+      <button type="button" class="photo-btn" onclick="fetchLocation()" id="locBtn" style="white-space:nowrap;flex-shrink:0">📍 현재 위치</button>
+    </div>
+  </div>
+  <div class="fg">
     <label class="fl">📷 영수증</label>
     <div class="photo-area">
       <label class="photo-btn"><span>📸 사진 첨부</span><input type="file" accept="image/*" id="f-photo" style="display:none" onchange="handlePhoto(this)"></label>
@@ -463,6 +470,32 @@ function handlePhoto(input){
 }
 function removePhoto(){pendingPhotoData=null;document.getElementById('photoPreview').classList.remove('show');document.getElementById('f-photo').value='';}
 
+// ===== Location (Nominatim) =====
+async function fetchLocation(){
+  const btn=document.getElementById('locBtn');
+  const inp=document.getElementById('f-location');
+  if(!navigator.geolocation){toast('이 브라우저에서 GPS를 지원하지 않습니다');return;}
+  btn.textContent='⏳ 조회중...';btn.disabled=true;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const lat=pos.coords.latitude,lon=pos.coords.longitude;
+      const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=10',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
+      const data=await res.json();
+      const addr=data.address||{};
+      const city=addr.city||addr.town||addr.county||addr.state||addr.country||'';
+      const country=addr.country||'';
+      inp.value=city+(country&&city!==country?', '+country:'');
+      toast('📍 '+inp.value);
+    }catch(e){toast('위치 변환 실패: 수동 입력해주세요');console.error(e);}
+    btn.textContent='📍 현재 위치';btn.disabled=false;
+  },err=>{
+    btn.textContent='📍 현재 위치';btn.disabled=false;
+    if(err.code===1)toast('위치 권한이 거부되었습니다');
+    else if(err.code===2)toast('위치를 확인할 수 없습니다');
+    else toast('위치 조회 시간 초과');
+  },{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
+}
+
 // ===== Save =====
 async function saveEntry(){
   const title=document.getElementById('f-title').value.trim();
@@ -478,10 +511,10 @@ async function saveEntry(){
   const payment=getChipVal('f-payment','f-custom-pay');
   let photoId=null;
   if(pendingPhotoData){photoId=genId()+'_p';try{await savePhotoDB(photoId,pendingPhotoData);}catch(e){console.error(e);}}
-  const entry={id:genId(),title,date:document.getElementById('f-date').value,time:getFormTime(),category,currency,amount,rate,payment,memo:document.getElementById('f-memo').value.trim(),photoId,checked:false,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  const entry={id:genId(),title,date:document.getElementById('f-date').value,time:getFormTime(),category,currency,amount,rate,payment,memo:document.getElementById('f-memo').value.trim(),location:document.getElementById('f-location').value.trim(),photoId,checked:false,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
   const entries=getEntries();entries.push(entry);setEntries(entries);
   if(currency!=='KRW'){s.rates[currency]=rate;setSettings(s);}
-  document.getElementById('f-title').value='';document.getElementById('f-amount').value='';document.getElementById('f-memo').value='';
+  document.getElementById('f-title').value='';document.getElementById('f-amount').value='';document.getElementById('f-memo').value='';document.getElementById('f-location').value='';
   document.querySelectorAll('#f-category .chip,#f-payment .chip').forEach(c=>c.classList.remove('active'));
   document.querySelectorAll('.custom-input-wrap').forEach(w=>w.classList.remove('show'));
   ['f-custom-cat','f-custom-cur','f-custom-pay'].forEach(id=>document.getElementById(id).value='');
@@ -596,7 +629,7 @@ function renderList(){
       const cv=toKRW(e,s);
       let amtH='<span class="entry-amount" style="color:'+getCurColor(e.currency)+'">'+fCur(e.amount,e.currency)+'</span>';
       if(e.currency!=='KRW')amtH+='<br><span class="entry-sub">= '+fK(cv)+'</span>';
-      listH+='<div class="entry-card'+(e.checked?' checked':'')+'" onclick="openEdit(\''+e.id+'\')"><div class="entry-top"><div class="entry-title">'+(e.checked?'✅ ':'')+esc(e.title)+'</div><div style="text-align:right">'+amtH+'</div></div><div class="entry-meta"><span class="entry-tag">'+(e.time||'')+'</span>'+(e.category?'<span class="entry-tag cat">'+esc(e.category)+'</span>':'')+(e.currency?'<span class="entry-tag cur">'+e.currency+'</span>':'')+(e.payment?'<span class="entry-tag pay">'+esc(e.payment)+'</span>':'')+'</div>'+(e.memo?'<div class="entry-memo">📝 '+esc(e.memo)+'</div>':'')+(e.photoId?'<div class="entry-photo" onclick="event.stopPropagation();viewPhoto(\''+e.photoId+'\')"><img id="thumb_'+e.id+'" data-pid="'+e.photoId+'"></div>':'')+'<div class="entry-balance">잔액 '+fK(balMap[e.id]||0)+'</div></div>';
+      listH+='<div class="entry-card'+(e.checked?' checked':'')+'" onclick="openEdit(\''+e.id+'\')"><div class="entry-top"><div class="entry-title">'+(e.checked?'✅ ':'')+esc(e.title)+'</div><div style="text-align:right">'+amtH+'</div></div><div class="entry-meta"><span class="entry-tag">'+(e.time||'')+'</span>'+(e.category?'<span class="entry-tag cat">'+esc(e.category)+'</span>':'')+(e.currency?'<span class="entry-tag cur">'+e.currency+'</span>':'')+(e.payment?'<span class="entry-tag pay">'+esc(e.payment)+'</span>':'')+(e.location?'<span class="entry-tag" style="color:var(--purple)">📍'+esc(e.location)+'</span>':'')+'</div>'+(e.memo?'<div class="entry-memo">📝 '+esc(e.memo)+'</div>':'')+(e.photoId?'<div class="entry-photo" onclick="event.stopPropagation();viewPhoto(\''+e.photoId+'\')"><img id="thumb_'+e.id+'" data-pid="'+e.photoId+'"></div>':'')+'<div class="entry-balance">잔액 '+fK(balMap[e.id]||0)+'</div></div>';
     });
   });
   container.innerHTML=listH;
@@ -804,6 +837,7 @@ function openEdit(id){
     '<div class="fg"><label class="fl">환율</label><input class="fi" type="number" id="e-rate" value="'+(e.rate||'')+'" step="0.01" inputmode="decimal"></div></div>'+
     '<div class="fg"><label class="fl">결제수단</label><select class="fi" id="e-pay"><option value="">선택</option>'+opts(allPays,e.payment)+'</select></div>'+
     '<div class="fg"><label class="fl">메모</label><textarea class="fi" id="e-memo" rows="2">'+esc(e.memo||'')+'</textarea></div>'+
+    '<div class="fg"><label class="fl">📍 장소</label><div style="display:flex;gap:8px;align-items:center"><input class="fi" id="e-location" value="'+esc(e.location||'')+'" placeholder="도시명" style="flex:1"><button type="button" class="photo-btn" onclick="fetchEditLocation()" id="editLocBtn" style="white-space:nowrap;flex-shrink:0">📍 현재 위치</button></div></div>'+
     '<div class="fg"><label class="fl">📷 영수증</label><div id="editPhotoArea"></div><div style="display:flex;gap:8px;margin-top:6px"><label class="photo-btn"><span>📸 사진 변경</span><input type="file" accept="image/*" style="display:none" onchange="handleEditPhoto(this)"></label><button class="photo-btn" onclick="removeEditPhoto()" id="editPhotoDelBtn" style="display:none;color:var(--red)">🗑 사진 삭제</button></div></div>'+
     '<div class="fg" style="display:flex;align-items:center;gap:10px;margin-top:4px"><input type="checkbox" id="e-checked" '+(e.checked?'checked':'')+' style="width:20px;height:20px;accent-color:var(--accent)"><label for="e-checked" style="font-size:14px">확인 완료</label></div>'+
     '<div class="modal-actions"><button class="btn-delete" onclick="deleteEntry()">삭제</button><button class="btn-save" onclick="updateEntry()">저장</button></div>';
@@ -819,6 +853,28 @@ function handleEditPhoto(input){
   };reader.readAsDataURL(file);
 }
 function closeModal(){document.getElementById('editModal').classList.remove('open');editingId=null;editPhotoData=null;editDeletePhoto=false;}
+async function fetchEditLocation(){
+  const btn=document.getElementById('editLocBtn');
+  const inp=document.getElementById('e-location');
+  if(!navigator.geolocation){toast('이 브라우저에서 GPS를 지원하지 않습니다');return;}
+  btn.textContent='⏳ 조회중...';btn.disabled=true;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const lat=pos.coords.latitude,lon=pos.coords.longitude;
+      const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=10',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
+      const data=await res.json();
+      const addr=data.address||{};
+      const city=addr.city||addr.town||addr.county||addr.state||addr.country||'';
+      const country=addr.country||'';
+      inp.value=city+(country&&city!==country?', '+country:'');
+      toast('📍 '+inp.value);
+    }catch(e){toast('위치 변환 실패');console.error(e);}
+    btn.textContent='📍 현재 위치';btn.disabled=false;
+  },err=>{
+    btn.textContent='📍 현재 위치';btn.disabled=false;
+    toast('위치 조회 실패');
+  },{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
+}
 async function updateEntry(){
   if(!editingId)return;const entries=getEntries();const idx=entries.findIndex(x=>x.id===editingId);if(idx===-1)return;
   const h=String(parseInt(document.getElementById('e-hour').value)||0).padStart(2,'0');
@@ -827,7 +883,7 @@ async function updateEntry(){
   let photoId=entries[idx].photoId;
   if(editPhotoData){if(photoId)try{await deletePhotoDB(photoId);}catch(e){}photoId=genId()+'_p';try{await savePhotoDB(photoId,editPhotoData);}catch(e){}}
   else if(editDeletePhoto){if(photoId)try{await deletePhotoDB(photoId);}catch(e){}photoId=null;}
-  entries[idx]={...entries[idx],title:document.getElementById('e-title').value.trim(),date:document.getElementById('e-date').value,time:h+':'+m,category:document.getElementById('e-cat').value,currency:cur,amount:parseFloat(document.getElementById('e-amount').value)||0,rate:cur==='KRW'?1:(parseFloat(document.getElementById('e-rate').value)||1),payment:document.getElementById('e-pay').value,memo:document.getElementById('e-memo').value.trim(),photoId,checked:document.getElementById('e-checked').checked,updatedAt:new Date().toISOString()};
+  entries[idx]={...entries[idx],title:document.getElementById('e-title').value.trim(),date:document.getElementById('e-date').value,time:h+':'+m,category:document.getElementById('e-cat').value,currency:cur,amount:parseFloat(document.getElementById('e-amount').value)||0,rate:cur==='KRW'?1:(parseFloat(document.getElementById('e-rate').value)||1),payment:document.getElementById('e-pay').value,memo:document.getElementById('e-memo').value.trim(),location:document.getElementById('e-location').value.trim(),photoId,checked:document.getElementById('e-checked').checked,updatedAt:new Date().toISOString()};
   setEntries(entries);closeModal();refreshAll();renderList();toast('✅ 수정됨');
 }
 async function deleteEntry(){
@@ -840,8 +896,8 @@ async function deleteEntry(){
 // ===== CSV =====
 function exportCSV(){
   const entries=getFilteredEntries(),s=getSettings();if(!entries.length){toast('내보낼 데이터가 없습니다');return;}
-  const h=['날짜','시간','항목','카테고리','통화','금액','환율','원화환산','결제수단','메모','확인','영수증'];
-  const rows=entries.map(e=>[e.date,e.time,'"'+(e.title||'').replace(/"/g,'""')+'"',e.category,e.currency,e.amount||0,e.rate||'',Math.round(toKRW(e,s)),e.payment,'"'+(e.memo||'').replace(/"/g,'""')+'"',e.checked?'Y':'N',e.photoId?'O':''].join(','));
+  const h=['날짜','시간','항목','카테고리','통화','금액','환율','원화환산','결제수단','장소','메모','확인','영수증'];
+  const rows=entries.map(e=>[e.date,e.time,'"'+(e.title||'').replace(/"/g,'""')+'"',e.category,e.currency,e.amount||0,e.rate||'',Math.round(toKRW(e,s)),e.payment,'"'+(e.location||'').replace(/"/g,'""')+'"','"'+(e.memo||'').replace(/"/g,'""')+'"',e.checked?'Y':'N',e.photoId?'O':''].join(','));
   const csv='\uFEFF'+h.join(',')+'\n'+rows.join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='공동경비_'+todayStr()+'.csv';a.click();toast('📥 CSV 내보내기 완료');
 }
