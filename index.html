@@ -309,6 +309,14 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
     <div class="chart-title">📈 일별 지출 추이</div>
     <canvas class="trend-canvas" id="trendChart"></canvas>
   </div>
+  <div class="chart-card">
+    <div class="chart-title">📍 장소별 지출</div>
+    <div class="donut-wrap">
+      <canvas class="donut-canvas" id="locDonutChart" width="140" height="140"></canvas>
+      <div class="donut-legend" id="locDonutLegend"></div>
+    </div>
+    <div id="locBreakdown" style="margin-top:8px"></div>
+  </div>
 </div>
 
 <!-- Edit Modal -->
@@ -479,13 +487,19 @@ async function fetchLocation(){
   navigator.geolocation.getCurrentPosition(async pos=>{
     try{
       const lat=pos.coords.latitude,lon=pos.coords.longitude;
-      const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=10',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
+      const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=14',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
       const data=await res.json();
       const addr=data.address||{};
-      const city=addr.city||addr.town||addr.county||addr.state||addr.country||'';
+      const detail=addr.suburb||addr.neighbourhood||addr.borough||addr.quarter||addr.district||addr.town_district||'';
+      const city=addr.city||addr.town||addr.county||addr.state||'';
       const country=addr.country||'';
-      inp.value=city+(country&&city!==country?', '+country:'');
-      toast('📍 '+inp.value);
+      let loc='';
+      if(detail&&city)loc=detail+', '+city;
+      else if(city)loc=city;
+      else if(detail)loc=detail;
+      else loc=country;
+      inp.value=loc;
+      toast('📍 '+loc);
     }catch(e){toast('위치 변환 실패: 수동 입력해주세요');console.error(e);}
     btn.textContent='📍 현재 위치';btn.disabled=false;
   },err=>{
@@ -650,13 +664,14 @@ function getStatEntries(){
 
 function renderStats(){
   const entries=getStatEntries(),s=getSettings();
-  let total=0;const byCat={},byPay={},byCur={},byDay={};
+  let total=0;const byCat={},byPay={},byCur={},byDay={},byLoc={};
   entries.forEach(e=>{
     const cv=toKRW(e,s);total+=cv;
     byCat[e.category||'미분류']=(byCat[e.category||'미분류']||0)+cv;
     byPay[e.payment||'미분류']=(byPay[e.payment||'미분류']||0)+cv;
     const cur=e.currency||'KRW';byCur[cur]=(byCur[cur]||0)+(e.amount||0);
     byDay[e.date||'?']=(byDay[e.date||'?']||0)+cv;
+    const loc=e.location||'미지정';byLoc[loc]=(byLoc[loc]||0)+cv;
   });
 
   // Header
@@ -672,6 +687,8 @@ function renderStats(){
   drawDonut('payDonutChart','payDonutLegend',byPay,total,false);
   renderCurBreakdown(byCur,s,total);
   drawTrend(byDay);
+  drawDonut('locDonutChart','locDonutLegend',byLoc,total,false);
+  renderLocBreakdown(byLoc,total);
 }
 
 function drawDonut(canvasId,legendId,data,total,useCatIcons){
@@ -730,6 +747,17 @@ function renderCurBreakdown(byCur,s,total){
     h+='<div class="bd-row"><span class="l">'+(curFlags[cur]||'💱')+' '+cur+' '+fCur(amt,cur)+'</span><span class="v" style="color:'+getCurColor(cur)+'">'+fK(krwVal)+' ('+pct+'%)</span></div><div class="bd-bar"><div class="bd-fill" style="width:'+pct+'%;background:'+getCurColor(cur)+'"></div></div>';
   });
   document.getElementById('curBreakdown').innerHTML=h;
+}
+
+function renderLocBreakdown(byLoc,total){
+  const sorted=Object.entries(byLoc).sort((a,b)=>b[1]-a[1]);
+  if(!sorted.length||sorted.length<2){document.getElementById('locBreakdown').innerHTML='';return;}
+  let h='<div style="padding-top:8px;border-top:1px solid var(--border);margin-top:4px">';
+  sorted.forEach(([loc,val],i)=>{
+    const pct=total>0?(val/total*100).toFixed(0):'0';
+    h+='<div class="bd-row"><span class="l">📍 '+esc(loc)+'</span><span class="v">'+fK(val)+' ('+pct+'%)</span></div><div class="bd-bar"><div class="bd-fill" style="width:'+pct+'%;background:'+chartColors[i%chartColors.length]+'"></div></div>';
+  });
+  document.getElementById('locBreakdown').innerHTML=h+'</div>';
 }
 
 function drawTrend(byDay){
@@ -861,13 +889,19 @@ async function fetchEditLocation(){
   navigator.geolocation.getCurrentPosition(async pos=>{
     try{
       const lat=pos.coords.latitude,lon=pos.coords.longitude;
-      const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=10',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
+      const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=14',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
       const data=await res.json();
       const addr=data.address||{};
-      const city=addr.city||addr.town||addr.county||addr.state||addr.country||'';
+      const detail=addr.suburb||addr.neighbourhood||addr.borough||addr.quarter||addr.district||addr.town_district||'';
+      const city=addr.city||addr.town||addr.county||addr.state||'';
       const country=addr.country||'';
-      inp.value=city+(country&&city!==country?', '+country:'');
-      toast('📍 '+inp.value);
+      let loc='';
+      if(detail&&city)loc=detail+', '+city;
+      else if(city)loc=city;
+      else if(detail)loc=detail;
+      else loc=country;
+      inp.value=loc;
+      toast('📍 '+loc);
     }catch(e){toast('위치 변환 실패');console.error(e);}
     btn.textContent='📍 현재 위치';btn.disabled=false;
   },err=>{
