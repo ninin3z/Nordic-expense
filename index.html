@@ -289,6 +289,18 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   </div>
   <div id="statHeader"></div>
   <div class="chart-card">
+    <div class="chart-title">📈 일별 지출 추이</div>
+    <canvas class="trend-canvas" id="trendChart"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">📍 장소별 지출</div>
+    <div class="donut-wrap">
+      <canvas class="donut-canvas" id="locDonutChart" width="140" height="140"></canvas>
+      <div class="donut-legend" id="locDonutLegend"></div>
+    </div>
+    <div id="locBreakdown" style="margin-top:8px"></div>
+  </div>
+  <div class="chart-card">
     <div class="chart-title">📊 카테고리별 지출 비율</div>
     <div class="donut-wrap">
       <canvas class="donut-canvas" id="donutChart" width="140" height="140"></canvas>
@@ -305,18 +317,6 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   <div class="chart-card">
     <div class="chart-title">💱 통화별 지출</div>
     <div id="curBreakdown"></div>
-  </div>
-  <div class="chart-card">
-    <div class="chart-title">📈 일별 지출 추이</div>
-    <canvas class="trend-canvas" id="trendChart"></canvas>
-  </div>
-  <div class="chart-card">
-    <div class="chart-title">📍 장소별 지출</div>
-    <div class="donut-wrap">
-      <canvas class="donut-canvas" id="locDonutChart" width="140" height="140"></canvas>
-      <div class="donut-legend" id="locDonutLegend"></div>
-    </div>
-    <div id="locBreakdown" style="margin-top:8px"></div>
   </div>
 </div>
 
@@ -677,7 +677,7 @@ function renderStats(){
     byPay[e.payment||'미분류']=(byPay[e.payment||'미분류']||0)+cv;
     const cur=e.currency||'KRW';byCur[cur]=(byCur[cur]||0)+(e.amount||0);
     byDay[e.date||'?']=(byDay[e.date||'?']||0)+cv;
-    const loc=e.location||'미지정';byLoc[loc]=(byLoc[loc]||0)+cv;
+    const loc=(e.location||'미지정').split(',')[0].trim();byLoc[loc]=(byLoc[loc]||0)+cv;
   });
 
   // Header
