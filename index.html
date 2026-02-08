@@ -214,6 +214,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
     <label class="fl">통화</label>
     <div class="chip-group" id="f-currency">
       <div class="chip" data-val="EUR">🇪🇺 EUR</div>
+      <div class="chip" data-val="USD">🇺🇸 USD</div>
       <div class="chip" data-val="SEK">🇸🇪 SEK</div>
       <div class="chip" data-val="DKK">🇩🇰 DKK</div>
       <div class="chip" data-val="KRW">🇰🇷 KRW</div>
@@ -327,6 +328,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   <div class="setting-row"><div><div class="setting-label">원금 (KRW)</div><div class="setting-desc">공동경비 총액</div></div><input class="setting-input" type="number" id="s-fund" inputmode="numeric"></div>
   <div style="padding:8px 0 4px;font-size:13px;font-weight:700;color:var(--orange)">기본 환율 (1 단위 → KRW)</div>
   <div class="setting-row"><div><div class="setting-label">🇪🇺 EUR</div></div><input class="setting-input" type="number" id="s-rate-EUR" step="0.01" inputmode="decimal"></div>
+  <div class="setting-row"><div><div class="setting-label">🇺🇸 USD</div></div><input class="setting-input" type="number" id="s-rate-USD" step="0.01" inputmode="decimal"></div>
   <div class="setting-row"><div><div class="setting-label">🇸🇪 SEK</div></div><input class="setting-input" type="number" id="s-rate-SEK" step="0.01" inputmode="decimal"></div>
   <div class="setting-row"><div><div class="setting-label">🇩🇰 DKK</div></div><input class="setting-input" type="number" id="s-rate-DKK" step="0.01" inputmode="decimal"></div>
   <button class="btn-primary" onclick="saveSettings()">저장</button>
@@ -340,10 +342,10 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
 <script>
 const SK='nordic_expense_v2',SSK='nordic_settings_v2',DB_NAME='nordic_receipts',DB_STORE='photos';
-const defaultRates={EUR:1500,SEK:140,DKK:210,KRW:1};
-const curSymbols={EUR:'€',SEK:'kr',DKK:'kr',KRW:'₩'};
-const curFlags={EUR:'🇪🇺',SEK:'🇸🇪',DKK:'🇩🇰',KRW:'🇰🇷'};
-const curColorMap={EUR:'var(--orange)',SEK:'var(--green)',DKK:'var(--yellow)',KRW:'var(--purple)'};
+const defaultRates={EUR:1500,USD:1450,SEK:140,DKK:210,KRW:1};
+const curSymbols={EUR:'€',USD:'$',SEK:'kr',DKK:'kr',KRW:'₩'};
+const curFlags={EUR:'🇪🇺',USD:'🇺🇸',SEK:'🇸🇪',DKK:'🇩🇰',KRW:'🇰🇷'};
+const curColorMap={EUR:'var(--orange)',USD:'#38bdf8',SEK:'var(--green)',DKK:'var(--yellow)',KRW:'var(--purple)'};
 const catIcons={'식사':'🍽','교통':'🚌','선택관광':'🏛','팁':'💵','숙박':'🏨','재무관리':'📊'};
 const chartColors=['#4a9eff','#34d399','#fbbf24','#a78bfa','#f87171','#fb923c','#38bdf8','#e879f9','#f472b6','#6ee7b7'];
 
@@ -490,11 +492,11 @@ async function fetchLocation(){
       const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=14',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
       const data=await res.json();
       const addr=data.address||{};
-      const detail=addr.suburb||addr.neighbourhood||addr.borough||addr.quarter||addr.district||addr.town_district||'';
+      const detail=addr.suburb||addr.neighbourhood||addr.borough||addr.quarter||addr.district||addr.town_district||addr.village||addr.hamlet||addr.town||'';
       const city=addr.city||addr.town||addr.county||addr.state||'';
       const country=addr.country||'';
       let loc='';
-      if(detail&&city)loc=detail+', '+city;
+      if(detail&&city&&detail!==city)loc=detail+', '+city;
       else if(city)loc=city;
       else if(detail)loc=detail;
       else loc=country;
@@ -549,7 +551,7 @@ function refreshAll(){
   document.getElementById('balAmt').className='balance-big '+(bal>=0?'pos':'neg');
   // 기존 통화별 지출
   let rHtml='';
-  const curOrder=['EUR','SEK','DKK','KRW'].concat(Object.keys(byCur).filter(c=>!['EUR','SEK','DKK','KRW'].includes(c)));
+  const curOrder=['EUR','USD','SEK','DKK','KRW'].concat(Object.keys(byCur).filter(c=>!['EUR','USD','SEK','DKK','KRW'].includes(c)));
   curOrder.forEach(cur=>{
     if(!byCur[cur])return;
     rHtml+='<div class="balance-item"><div class="bl">'+(curFlags[cur]||'💱')+' '+cur+'</div><div class="v" style="color:'+getCurColor(cur)+'">'+fCur(byCur[cur],cur)+'</div></div>';
@@ -851,7 +853,7 @@ function openEdit(id){
   editingId=id;editPhotoData=null;editDeletePhoto=false;const e=getEntries().find(x=>x.id===id);if(!e)return;
   const[eh,em]=(e.time||'00:00').split(':');
   const allCats=new Set(['식사','교통','선택관광','팁','숙박','재무관리','기타']);
-  const allCurs=new Set(['EUR','SEK','DKK','KRW']);
+  const allCurs=new Set(['EUR','USD','SEK','DKK','KRW']);
   const allPays=new Set(['카드','현금']);
   getEntries().forEach(x=>{if(x.category)allCats.add(x.category);if(x.currency)allCurs.add(x.currency);if(x.payment)allPays.add(x.payment);});
   const opts=(vals,cur)=>[...vals].map(v=>'<option '+(v===cur?'selected':'')+'>'+esc(v)+'</option>').join('');
@@ -892,11 +894,11 @@ async function fetchEditLocation(){
       const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=14',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
       const data=await res.json();
       const addr=data.address||{};
-      const detail=addr.suburb||addr.neighbourhood||addr.borough||addr.quarter||addr.district||addr.town_district||'';
+      const detail=addr.suburb||addr.neighbourhood||addr.borough||addr.quarter||addr.district||addr.town_district||addr.village||addr.hamlet||addr.town||'';
       const city=addr.city||addr.town||addr.county||addr.state||'';
       const country=addr.country||'';
       let loc='';
-      if(detail&&city)loc=detail+', '+city;
+      if(detail&&city&&detail!==city)loc=detail+', '+city;
       else if(city)loc=city;
       else if(detail)loc=detail;
       else loc=country;
@@ -959,13 +961,14 @@ function showSettings(){
   const s=getSettings();
   document.getElementById('s-fund').value=s.fund;
   document.getElementById('s-rate-EUR').value=s.rates.EUR||1500;
+  document.getElementById('s-rate-USD').value=s.rates.USD||1450;
   document.getElementById('s-rate-SEK').value=s.rates.SEK||140;
   document.getElementById('s-rate-DKK').value=s.rates.DKK||210;
   document.getElementById('settingsModal').classList.add('open');
 }
 function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
 function saveSettings(){
-  const rates={...getSettings().rates,EUR:parseFloat(document.getElementById('s-rate-EUR').value)||1500,SEK:parseFloat(document.getElementById('s-rate-SEK').value)||140,DKK:parseFloat(document.getElementById('s-rate-DKK').value)||210,KRW:1};
+  const rates={...getSettings().rates,EUR:parseFloat(document.getElementById('s-rate-EUR').value)||1500,USD:parseFloat(document.getElementById('s-rate-USD').value)||1450,SEK:parseFloat(document.getElementById('s-rate-SEK').value)||140,DKK:parseFloat(document.getElementById('s-rate-DKK').value)||210,KRW:1};
   setSettings({fund:parseInt(document.getElementById('s-fund').value)||5400000,rates});
   closeSettings();refreshAll();toast('✅ 설정 저장됨');
 }
