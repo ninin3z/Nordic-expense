@@ -489,16 +489,20 @@ async function fetchLocation(){
   navigator.geolocation.getCurrentPosition(async pos=>{
     try{
       const lat=pos.coords.latitude,lon=pos.coords.longitude;
-      const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=14',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
-      const data=await res.json();
-      const addr=data.address||{};
-      const detail=addr.suburb||addr.neighbourhood||addr.borough||addr.quarter||addr.district||addr.town_district||addr.village||addr.hamlet||'';
-      const city=addr.city||addr.town||addr.county||addr.state||'';
-      const country=addr.country||'';
+      const base='https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko';
+      const hdr={headers:{'User-Agent':'NordicExpenseApp/1.0'}};
+      const [r12,r14]=await Promise.all([fetch(base+'&zoom=12',hdr),fetch(base+'&zoom=14',hdr)]);
+      const [d12,d14]=await Promise.all([r12.json(),r14.json()]);
+      const a12=d12.address||{},a14=d14.address||{};
+      const country=a12.country||a14.country||'';
+      const city=a12.city||a12.town||a12.county||a14.city||a14.town||a14.county||'';
+      const mid=a12.city_district||a12.town||a12.borough||'';
+      const fine=a14.suburb||a14.neighbourhood||a14.quarter||a14.village||a14.hamlet||'';
+      const detail=(mid&&mid!==city)?mid:(fine&&fine!==city)?fine:'';
       let parts=[];
       if(country)parts.push(country);
       if(city)parts.push(city);
-      if(detail&&detail!==city)parts.push(detail);
+      if(detail)parts.push(detail);
       let loc=parts.join(', ')||'알 수 없음';
       inp.value=loc;
       toast('📍 '+loc);
@@ -891,16 +895,20 @@ async function fetchEditLocation(){
   navigator.geolocation.getCurrentPosition(async pos=>{
     try{
       const lat=pos.coords.latitude,lon=pos.coords.longitude;
-      const res=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko&zoom=14',{headers:{'User-Agent':'NordicExpenseApp/1.0'}});
-      const data=await res.json();
-      const addr=data.address||{};
-      const detail=addr.suburb||addr.neighbourhood||addr.borough||addr.quarter||addr.district||addr.town_district||addr.village||addr.hamlet||'';
-      const city=addr.city||addr.town||addr.county||addr.state||'';
-      const country=addr.country||'';
+      const base='https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ko';
+      const hdr={headers:{'User-Agent':'NordicExpenseApp/1.0'}};
+      const [r12,r14]=await Promise.all([fetch(base+'&zoom=12',hdr),fetch(base+'&zoom=14',hdr)]);
+      const [d12,d14]=await Promise.all([r12.json(),r14.json()]);
+      const a12=d12.address||{},a14=d14.address||{};
+      const country=a12.country||a14.country||'';
+      const city=a12.city||a12.town||a12.county||a14.city||a14.town||a14.county||'';
+      const mid=a12.city_district||a12.town||a12.borough||'';
+      const fine=a14.suburb||a14.neighbourhood||a14.quarter||a14.village||a14.hamlet||'';
+      const detail=(mid&&mid!==city)?mid:(fine&&fine!==city)?fine:'';
       let parts=[];
       if(country)parts.push(country);
       if(city)parts.push(city);
-      if(detail&&detail!==city)parts.push(detail);
+      if(detail)parts.push(detail);
       let loc=parts.join(', ')||'알 수 없음';
       inp.value=loc;
       toast('📍 '+loc);
