@@ -1059,20 +1059,16 @@
     </div>
     <div class="fg">
       <label class="fl">통화 / 환율</label>
-      <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
-        <div class="chip-group" id="f-currency" style="flex:1">
-          <div class="chip" data-val="EUR">🇪🇺 EUR</div>
-          <div class="chip" data-val="USD">🇺🇸 USD</div>
-          <div class="chip" data-val="SEK">🇸🇪 SEK</div>
-          <div class="chip" data-val="DKK">🇩🇰 DKK</div>
-          <div class="chip" data-val="KRW">🇰🇷 KRW</div>
-          <div class="chip" data-val="__custom__">✏️ 기타</div>
-        </div>
-        <div class="amount-wrap" style="width:110px;flex-shrink:0">
-          <input class="fi" type="number" id="f-rate" step="0.01" placeholder="환율" inputmode="decimal"
-            style="padding-right:24px">
-          <span class="tag">₩</span>
-        </div>
+      <div class="chip-group" id="f-currency">
+        <div class="chip" data-val="EUR">🇪🇺 EUR</div>
+        <div class="chip" data-val="USD">🇺🇸 USD</div>
+        <div class="chip" data-val="SEK">🇸🇪 SEK</div>
+        <div class="chip" data-val="DKK">🇩🇰 DKK</div>
+        <div class="chip" data-val="KRW">🇰🇷 KRW</div>
+        <div class="chip" data-val="__custom__">✏️ 기타</div>
+        <div class="amount-wrap" style="flex:1 1 80px;min-width:70px"><input class="fi" type="number" id="f-rate"
+            step="0.01" placeholder="환율" inputmode="decimal" style="padding:7px 26px 7px 8px;font-size:13px"><span
+            class="tag" style="font-size:11px">₩</span></div>
       </div>
       <div class="custom-input-wrap" id="customCurWrap"><input class="fi" id="f-custom-cur"
           placeholder="통화코드 (예: NOK, GBP)"></div>
