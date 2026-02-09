@@ -331,6 +331,8 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   <div class="setting-row"><div><div class="setting-label">🇺🇸 USD</div></div><input class="setting-input" type="number" id="s-rate-USD" step="0.01" inputmode="decimal"></div>
   <div class="setting-row"><div><div class="setting-label">🇸🇪 SEK</div></div><input class="setting-input" type="number" id="s-rate-SEK" step="0.01" inputmode="decimal"></div>
   <div class="setting-row"><div><div class="setting-label">🇩🇰 DKK</div></div><input class="setting-input" type="number" id="s-rate-DKK" step="0.01" inputmode="decimal"></div>
+  <div style="padding:8px 0 4px;font-size:13px;font-weight:700;color:var(--orange)">자동 백업</div>
+  <div class="setting-row"><div><div class="setting-label">🔄 30분 자동 백업</div><div class="setting-desc">30분마다 JSON 자동 다운로드</div></div><input type="checkbox" id="s-auto-backup"></div>
   <button class="btn-primary" onclick="saveSettings()">저장</button>
   <button class="btn-backup" onclick="exportJSON()">📦 전체 백업 (JSON)</button>
   <label class="btn-backup" style="text-align:center;display:block;cursor:pointer">📂 백업 복원<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
@@ -349,7 +351,7 @@ const curColorMap={EUR:'var(--orange)',USD:'#38bdf8',SEK:'var(--green)',DKK:'var
 const catIcons={'식사':'🍽','교통':'🚌','선택관광':'🏛','팁':'💵','숙박':'🏨','재무관리':'📊'};
 const chartColors=['#4a9eff','#34d399','#fbbf24','#a78bfa','#f87171','#fb923c','#38bdf8','#e879f9','#f472b6','#6ee7b7'];
 
-const getSettings=()=>{try{const s=JSON.parse(localStorage.getItem(SSK));return{fund:s?.fund||5400000,rates:{...defaultRates,...(s?.rates||{})}};}catch(e){return{fund:5400000,rates:{...defaultRates}};}};
+const getSettings=()=>{try{const s=JSON.parse(localStorage.getItem(SSK));return{fund:s?.fund||5400000,rates:{...defaultRates,...(s?.rates||{})},autoBackup:s?.autoBackup||false};}catch(e){return{fund:5400000,rates:{...defaultRates},autoBackup:false};}};
 const setSettings=s=>localStorage.setItem(SSK,JSON.stringify(s));
 const getEntries=()=>{try{return JSON.parse(localStorage.getItem(SK))||[];}catch(e){return[];}};
 const setEntries=a=>localStorage.setItem(SK,JSON.stringify(a));
@@ -953,6 +955,7 @@ async function exportJSON(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));a.download='공동경비_백업_'+todayStr()+'.json';a.click();toast('📦 백업 완료 (사진 포함)');
 }
 function autoBackup(){
+  if(!getSettings().autoBackup)return;
   const entries=getEntries();if(!entries.length)return;
   const data={settings:getSettings(),entries,photos:[],exportedAt:new Date().toISOString()};
   const now=new Date();const ts=String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
@@ -979,12 +982,13 @@ function showSettings(){
   document.getElementById('s-rate-USD').value=s.rates.USD||1450;
   document.getElementById('s-rate-SEK').value=s.rates.SEK||140;
   document.getElementById('s-rate-DKK').value=s.rates.DKK||210;
+  document.getElementById('s-auto-backup').checked=s.autoBackup||false;
   document.getElementById('settingsModal').classList.add('open');
 }
 function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
 function saveSettings(){
   const rates={...getSettings().rates,EUR:parseFloat(document.getElementById('s-rate-EUR').value)||1500,USD:parseFloat(document.getElementById('s-rate-USD').value)||1450,SEK:parseFloat(document.getElementById('s-rate-SEK').value)||140,DKK:parseFloat(document.getElementById('s-rate-DKK').value)||210,KRW:1};
-  setSettings({fund:parseInt(document.getElementById('s-fund').value)||5400000,rates});
+  setSettings({fund:parseInt(document.getElementById('s-fund').value)||5400000,rates,autoBackup:document.getElementById('s-auto-backup').checked});
   closeSettings();refreshAll();toast('✅ 설정 저장됨');
 }
 function confirmReset(){
