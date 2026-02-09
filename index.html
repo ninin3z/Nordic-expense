@@ -952,6 +952,13 @@ async function exportJSON(){
   const data={settings:getSettings(),entries:getEntries(),photos,exportedAt:new Date().toISOString()};
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));a.download='공동경비_백업_'+todayStr()+'.json';a.click();toast('📦 백업 완료 (사진 포함)');
 }
+function autoBackup(){
+  const entries=getEntries();if(!entries.length)return;
+  const data={settings:getSettings(),entries,photos:[],exportedAt:new Date().toISOString()};
+  const now=new Date();const ts=String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));a.download='자동백업_'+todayStr()+'_'+ts+'.json';a.click();toast('🔄 자동 백업 완료');
+}
+setInterval(autoBackup,30*60*1000);
 function importJSON(ev){
   const file=ev.target.files[0];if(!file)return;
   const r=new FileReader();r.onload=async function(e){
