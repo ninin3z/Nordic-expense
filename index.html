@@ -1058,26 +1058,33 @@
       </div>
     </div>
     <div class="fg">
-      <label class="fl">통화</label>
-      <div class="chip-group" id="f-currency">
-        <div class="chip" data-val="EUR">🇪🇺 EUR</div>
-        <div class="chip" data-val="USD">🇺🇸 USD</div>
-        <div class="chip" data-val="SEK">🇸🇪 SEK</div>
-        <div class="chip" data-val="DKK">🇩🇰 DKK</div>
-        <div class="chip" data-val="KRW">🇰🇷 KRW</div>
-        <div class="chip" data-val="__custom__">✏️ 기타</div>
+      <label class="fl">통화 / 환율</label>
+      <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
+        <div class="chip-group" id="f-currency" style="flex:1">
+          <div class="chip" data-val="EUR">🇪🇺 EUR</div>
+          <div class="chip" data-val="USD">🇺🇸 USD</div>
+          <div class="chip" data-val="SEK">🇸🇪 SEK</div>
+          <div class="chip" data-val="DKK">🇩🇰 DKK</div>
+          <div class="chip" data-val="KRW">🇰🇷 KRW</div>
+          <div class="chip" data-val="__custom__">✏️ 기타</div>
+        </div>
+        <div class="amount-wrap" style="width:110px;flex-shrink:0">
+          <input class="fi" type="number" id="f-rate" step="0.01" placeholder="환율" inputmode="decimal"
+            style="padding-right:24px">
+          <span class="tag">₩</span>
+        </div>
       </div>
       <div class="custom-input-wrap" id="customCurWrap"><input class="fi" id="f-custom-cur"
           placeholder="통화코드 (예: NOK, GBP)"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="fl">금액</label>
-        <div class="amount-wrap"><input class="fi" type="number" id="f-amount" placeholder="0" step="0.01" min="0"
+      <div class="fg"><label class="fl">외화 금액</label>
+        <div class="amount-wrap"><input class="fi" type="number" id="f-amount" placeholder="0" step="0.01"
             inputmode="decimal"><span class="tag" id="f-amount-tag">---</span></div>
       </div>
-      <div class="fg"><label class="fl">환율 (→KRW)</label>
-        <div class="amount-wrap"><input class="fi" type="number" id="f-rate" step="0.01" min="0"
-            inputmode="decimal"><span class="tag">₩</span></div>
+      <div class="fg"><label class="fl">원화 결제액 (카드앱)</label>
+        <div class="amount-wrap"><input class="fi" type="number" id="f-krw-amount" placeholder="자동 또는 직접입력" step="1"
+            inputmode="numeric"><span class="tag">₩</span></div>
       </div>
     </div>
     <div class="fg">
@@ -1358,11 +1365,46 @@
       const cur = getChipVal('f-currency', 'f-custom-cur');
       document.getElementById('f-amount-tag').textContent = cur || '---';
       const s = getSettings();
-      if (cur === 'KRW') document.getElementById('f-rate').value = 1;
-      else if (cur && s.rates[cur]) document.getElementById('f-rate').value = s.rates[cur];
-      else document.getElementById('f-rate').value = '';
+      if (cur === 'KRW') {
+        document.getElementById('f-rate').value = 1;
+        document.getElementById('f-rate').disabled = true;
+        document.getElementById('f-krw-amount').disabled = true;
+        document.getElementById('f-krw-amount').value = '';
+        document.getElementById('f-krw-amount').placeholder = 'KRW는 해당없음';
+      } else {
+        document.getElementById('f-rate').disabled = false;
+        document.getElementById('f-krw-amount').disabled = false;
+        document.getElementById('f-krw-amount').placeholder = '자동 또는 직접입력';
+        if (cur && s.rates[cur]) document.getElementById('f-rate').value = s.rates[cur];
+        else document.getElementById('f-rate').value = '';
+      }
+      calcKrwFromRate();
     }
     document.getElementById('f-custom-cur').addEventListener('input', updateCurrencyUI);
+
+    // 상호 계산 로직
+    function calcKrwFromRate() {
+      const cur = getChipVal('f-currency', 'f-custom-cur');
+      if (cur === 'KRW') return;
+      const amt = parseFloat(document.getElementById('f-amount').value) || 0;
+      const rate = parseFloat(document.getElementById('f-rate').value) || 0;
+      if (amt && rate) {
+        document.getElementById('f-krw-amount').value = Math.round(amt * rate);
+      }
+    }
+    function calcRateFromKrw() {
+      const cur = getChipVal('f-currency', 'f-custom-cur');
+      if (cur === 'KRW') return;
+      const amt = parseFloat(document.getElementById('f-amount').value) || 0;
+      const krw = parseFloat(document.getElementById('f-krw-amount').value) || 0;
+      if (amt && krw) {
+        const rate = krw / amt;
+        document.getElementById('f-rate').value = rate.toFixed(2);
+      }
+    }
+    document.getElementById('f-amount').addEventListener('input', calcKrwFromRate);
+    document.getElementById('f-rate').addEventListener('input', calcKrwFromRate);
+    document.getElementById('f-krw-amount').addEventListener('input', calcRateFromKrw);
 
     document.getElementById('f-hour').addEventListener('input', function () { if (parseInt(this.value) > 23) this.value = 23; if (this.value.length >= 2) document.getElementById('f-min').focus(); });
     document.getElementById('f-min').addEventListener('input', function () { if (parseInt(this.value) > 59) this.value = 59; });
@@ -1373,6 +1415,7 @@
       document.getElementById('f-hour').value = String(t.h).padStart(2, '0');
       document.getElementById('f-min').value = String(t.m).padStart(2, '0');
       document.getElementById('f-rate').value = '';
+      document.getElementById('f-krw-amount').value = '';
       document.getElementById('f-amount-tag').textContent = '---';
     }
     setFormDefaults();
@@ -1451,7 +1494,7 @@
       const entry = { id: genId(), title, date: document.getElementById('f-date').value, time: getFormTime(), category, currency, amount, rate, payment, memo: document.getElementById('f-memo').value.trim(), location: document.getElementById('f-location').value.trim(), photoId, checked: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       const entries = getEntries(); entries.push(entry); setEntries(entries);
       if (currency !== 'KRW') { s.rates[currency] = rate; setSettings(s); }
-      document.getElementById('f-title').value = ''; document.getElementById('f-amount').value = ''; document.getElementById('f-memo').value = ''; document.getElementById('f-location').value = '';
+      document.getElementById('f-title').value = ''; document.getElementById('f-amount').value = ''; document.getElementById('f-krw-amount').value = ''; document.getElementById('f-memo').value = ''; document.getElementById('f-location').value = '';
       document.querySelectorAll('#f-category .chip,#f-payment .chip').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.custom-input-wrap').forEach(w => w.classList.remove('show'));
       ['f-custom-cat', 'f-custom-cur', 'f-custom-pay'].forEach(id => document.getElementById(id).value = '');
