@@ -1239,7 +1239,7 @@
       <div class="setting-row">
         <div>
           <div class="setting-label">🔄 30분 자동 백업</div>
-          <div class="setting-desc">30분마다 JSON 자동 다운로드</div>
+          <div class="setting-desc">30분마다 JSON 자동 다운로드 (영수증 사진 제외 — 사진은 전체 백업으로)</div>
         </div><input type="checkbox" id="s-auto-backup">
       </div>
       <button class="btn-primary" onclick="saveSettings()">저장</button>
@@ -1276,7 +1276,7 @@
     const fD = d => { if (!d) return ''; const t = new Date(d + 'T00:00:00'); return (t.getMonth() + 1) + '/' + t.getDate(); };
     const fDFull = d => { if (!d) return ''; const t = new Date(d + 'T00:00:00'); return (t.getMonth() + 1) + '월 ' + t.getDate() + '일'; };
     const weekdayName = d => { if (!d) return ''; return ['일', '월', '화', '수', '목', '금', '토'][new Date(d + 'T00:00:00').getDay()]; };
-    const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const getCurColor = c => curColorMap[c] || 'var(--green)';
     const getAmtColor = (amt, cur) => amt < 0 ? 'var(--green)' : getCurColor(cur);
     const fAmtDisplay = (amt, cur) => { const abs = Math.abs(amt); const formatted = cur === 'KRW' ? fK(abs) : (curSymbols[cur] || cur + ' ') + Number(abs).toLocaleString('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); return amt < 0 ? '↩ ' + formatted : formatted; };
@@ -1500,10 +1500,10 @@
     // ===== Dashboard =====
     function refreshAll() {
       const entries = getEntries(), s = getSettings(), today = todayStr();
-      const byCur = {}; let tConv = 0, tdConv = 0, tdCnt = 0;
+      const byCur = {}, byCurKrw = {}; let tConv = 0, tdConv = 0, tdCnt = 0;
       entries.forEach(e => {
         const cur = e.currency || 'KRW'; byCur[cur] = (byCur[cur] || 0) + (e.amount || 0);
-        const cv = toKRW(e, s); tConv += cv;
+        const cv = toKRW(e, s); tConv += cv; byCurKrw[cur] = (byCurKrw[cur] || 0) + cv;
         if (e.date === today) { tdConv += cv; tdCnt++; }
       });
       const bal = s.fund - tConv;
@@ -1525,7 +1525,7 @@
       if (activeCurs.length > 0) {
         cbHtml += '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:4px">통화별 원화환산 내역</div>';
         activeCurs.forEach(cur => {
-          const krwVal = byCur[cur] * (s.rates[cur] || 1);
+          const krwVal = byCurKrw[cur];
           const pct = tConv > 0 ? (krwVal / tConv * 100).toFixed(0) : '0';
           cbHtml += '<div class="cur-bal-row"><span class="cur-bal-label">' + (curFlags[cur] || '💱') + ' ' + cur + ' ' + fCur(byCur[cur], cur) + '</span><span class="cur-bal-spent" style="color:' + getCurColor(cur) + '">' + fK(krwVal) + ' <span style="font-size:10px;color:var(--text2)">(' + pct + '%)</span></span></div>';
         });
@@ -1630,12 +1630,12 @@
 
     function renderStats() {
       const entries = getStatEntries(), s = getSettings();
-      let total = 0; const byCat = {}, byPay = {}, byCur = {}, byDay = {}, byLoc = {};
+      let total = 0; const byCat = {}, byPay = {}, byCur = {}, byCurKrw = {}, byDay = {}, byLoc = {};
       entries.forEach(e => {
         const cv = toKRW(e, s); total += cv;
         byCat[e.category || '미분류'] = (byCat[e.category || '미분류'] || 0) + cv;
         byPay[e.payment || '미분류'] = (byPay[e.payment || '미분류'] || 0) + cv;
-        const cur = e.currency || 'KRW'; byCur[cur] = (byCur[cur] || 0) + (e.amount || 0);
+        const cur = e.currency || 'KRW'; byCur[cur] = (byCur[cur] || 0) + (e.amount || 0); byCurKrw[cur] = (byCurKrw[cur] || 0) + cv;
         byDay[e.date || '?'] = (byDay[e.date || '?'] || 0) + cv;
         const loc = (e.location || '미지정').split(',')[0].trim(); byLoc[loc] = (byLoc[loc] || 0) + cv;
       });
@@ -1649,15 +1649,15 @@
         '<div class="summary-cond">' + (isFiltered ? '🔍 ' : '') + label + ' · ' + entries.length + '건</div>' +
         '<div class="summary-total">' + fK(total) + '</div></div>';
 
-      drawDonut('donutChart', 'donutLegend', byCat, total, true);
-      drawDonut('payDonutChart', 'payDonutLegend', byPay, total, false);
-      renderCurBreakdown(byCur, s, total);
+      drawDonut('donutChart', 'donutLegend', byCat, true);
+      drawDonut('payDonutChart', 'payDonutLegend', byPay, false);
+      renderCurBreakdown(byCur, byCurKrw, total);
       drawTrend(byDay);
-      drawDonut('locDonutChart', 'locDonutLegend', byLoc, total, false);
+      drawDonut('locDonutChart', 'locDonutLegend', byLoc, false);
       renderLocBreakdown(byLoc, total);
     }
 
-    function drawDonut(canvasId, legendId, data, total, useCatIcons) {
+    function drawDonut(canvasId, legendId, data, useCatIcons) {
       const canvas = document.getElementById(canvasId);
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
@@ -1667,7 +1667,9 @@
       ctx.clearRect(0, 0, 140, 140);
 
       const cx = 70, cy = 70, outerR = 60, innerR = 36;
-      const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+      // 환불(음수)은 비율 계산에서 제외
+      const sorted = Object.entries(data).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+      const sum = sorted.reduce((a, [, v]) => a + v, 0);
 
       if (!sorted.length) {
         ctx.fillStyle = '#2e3345'; ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI * 2); ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true); ctx.fill();
@@ -1677,7 +1679,7 @@
 
       let startAngle = -Math.PI / 2;
       sorted.forEach(([k, val], i) => {
-        const sliceAngle = (val / total) * Math.PI * 2;
+        const sliceAngle = (val / sum) * Math.PI * 2;
         ctx.fillStyle = chartColors[i % chartColors.length];
         ctx.beginPath();
         ctx.moveTo(cx + Math.cos(startAngle) * innerR, cy + Math.sin(startAngle) * innerR);
@@ -1690,25 +1692,23 @@
       ctx.fillStyle = '#9498a8'; ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(sorted.length + '개', cx, cy - 6);
       ctx.fillStyle = '#e8eaf0'; ctx.font = 'bold 12px -apple-system,sans-serif';
-      ctx.fillText(fK(total), cx, cy + 8);
+      ctx.fillText(fK(sum), cx, cy + 8);
 
       let legH = '';
       sorted.forEach(([k, val], i) => {
-        const pct = total > 0 ? (val / total * 100).toFixed(1) : '0';
+        const pct = (val / sum * 100).toFixed(1);
         const icon = useCatIcons ? (catIcons[k] || '📌') : '';
         legH += '<div class="legend-item"><span class="legend-dot" style="background:' + chartColors[i % chartColors.length] + '"></span><span class="legend-label">' + icon + (icon ? ' ' : '') + esc(k) + '</span><span class="legend-val">' + pct + '%</span></div>';
       });
       document.getElementById(legendId).innerHTML = legH;
     }
 
-    function renderCurBreakdown(byCur, s, total) {
-      const sorted = Object.entries(byCur).sort((a, b) => {
-        const aK = a[1] * (s.rates[a[0]] || 1), bK = b[1] * (s.rates[b[0]] || 1); return bK - aK;
-      });
+    function renderCurBreakdown(byCur, byCurKrw, total) {
+      const sorted = Object.entries(byCur).sort((a, b) => byCurKrw[b[0]] - byCurKrw[a[0]]);
       if (!sorted.length) { document.getElementById('curBreakdown').innerHTML = '<div style="font-size:12px;color:var(--text2);text-align:center;padding:20px">데이터 없음</div>'; return; }
       let h = '';
       sorted.forEach(([cur, amt], i) => {
-        const krwVal = amt * (cur === 'KRW' ? 1 : (s.rates[cur] || 1));
+        const krwVal = byCurKrw[cur];
         const pct = total > 0 ? (krwVal / total * 100).toFixed(0) : '0';
         h += '<div class="bd-row"><span class="l">' + (curFlags[cur] || '💱') + ' ' + cur + ' ' + fCur(amt, cur) + '</span><span class="v" style="color:' + getCurColor(cur) + '">' + fK(krwVal) + ' (' + pct + '%)</span></div><div class="bd-bar"><div class="bd-fill" style="width:' + pct + '%;background:' + getCurColor(cur) + '"></div></div>';
       });
@@ -1881,13 +1881,20 @@
     }
     async function updateEntry() {
       if (!editingId) return; const entries = getEntries(); const idx = entries.findIndex(x => x.id === editingId); if (idx === -1) return;
+      const title = document.getElementById('e-title').value.trim();
+      if (!title) { toast('항목명을 입력하세요'); return; }
+      const amount = parseFloat(document.getElementById('e-amount').value) || 0;
+      if (amount === 0) { toast('금액을 입력하세요'); return; }
+      const cur = document.getElementById('e-cur').value;
+      if (!cur) { toast('통화를 선택하세요'); return; }
+      const rateIn = parseFloat(document.getElementById('e-rate').value) || 0;
+      if (cur !== 'KRW' && !rateIn) { toast('환율을 입력하세요'); return; }
       const h = String(parseInt(document.getElementById('e-hour').value) || 0).padStart(2, '0');
       const m = String(parseInt(document.getElementById('e-min').value) || 0).padStart(2, '0');
-      const cur = document.getElementById('e-cur').value;
       let photoId = entries[idx].photoId;
       if (editPhotoData) { if (photoId) try { await deletePhotoDB(photoId); } catch (e) { } photoId = genId() + '_p'; try { await savePhotoDB(photoId, editPhotoData); } catch (e) { } }
       else if (editDeletePhoto) { if (photoId) try { await deletePhotoDB(photoId); } catch (e) { } photoId = null; }
-      entries[idx] = { ...entries[idx], title: document.getElementById('e-title').value.trim(), date: document.getElementById('e-date').value, time: h + ':' + m, category: document.getElementById('e-cat').value, currency: cur, amount: parseFloat(document.getElementById('e-amount').value) || 0, rate: cur === 'KRW' ? 1 : (parseFloat(document.getElementById('e-rate').value) || 1), payment: document.getElementById('e-pay').value, memo: document.getElementById('e-memo').value.trim(), location: document.getElementById('e-location').value.trim(), photoId, checked: document.getElementById('e-checked').checked, updatedAt: new Date().toISOString() };
+      entries[idx] = { ...entries[idx], title, date: document.getElementById('e-date').value, time: h + ':' + m, category: document.getElementById('e-cat').value, currency: cur, amount, rate: cur === 'KRW' ? 1 : rateIn, payment: document.getElementById('e-pay').value, memo: document.getElementById('e-memo').value.trim(), location: document.getElementById('e-location').value.trim(), photoId, checked: document.getElementById('e-checked').checked, updatedAt: new Date().toISOString() };
       setEntries(entries); closeModal(); refreshAll(); renderList(); toast('✅ 수정됨');
     }
     async function deleteEntry() {
@@ -1901,7 +1908,8 @@
     function exportCSV() {
       const entries = getFilteredEntries(), s = getSettings(); if (!entries.length) { toast('내보낼 데이터가 없습니다'); return; }
       const h = ['날짜', '시간', '항목', '카테고리', '통화', '금액', '환율', '원화환산', '결제수단', '장소', '메모', '확인', '영수증'];
-      const rows = entries.map(e => [e.date, e.time, '"' + (e.title || '').replace(/"/g, '""') + '"', e.category, e.currency, e.amount || 0, e.rate || '', Math.round(toKRW(e, s)), e.payment, '"' + (e.location || '').replace(/"/g, '""') + '"', '"' + (e.memo || '').replace(/"/g, '""') + '"', e.checked ? 'Y' : 'N', e.photoId ? 'O' : ''].join(','));
+      const q = v => { const t = String(v ?? ''); return /[",\r\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+      const rows = entries.map(e => [e.date, e.time, e.title, e.category, e.currency, e.amount || 0, e.rate || '', Math.round(toKRW(e, s)), e.payment, e.location, e.memo, e.checked ? 'Y' : 'N', e.photoId ? 'O' : ''].map(q).join(','));
       const csv = '\uFEFF' + h.join(',') + '\n' + rows.join('\n');
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = '공동경비_' + todayStr() + '.csv'; a.click(); toast('📥 CSV 내보내기 완료');
     }
@@ -1917,7 +1925,7 @@
       const entries = getEntries(); if (!entries.length) return;
       const data = { settings: getSettings(), entries, photos: [], exportedAt: new Date().toISOString() };
       const now = new Date(); const ts = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' })); a.download = '자동백업_' + todayStr() + '_' + ts + '.json'; a.click(); toast('🔄 자동 백업 완료');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' })); a.download = '자동백업_' + todayStr() + '_' + ts + '.json'; a.click(); toast('🔄 자동 백업 완료 (사진 제외)');
     }
     setInterval(autoBackup, 30 * 60 * 1000);
     function importJSON(ev) {
@@ -1953,7 +1961,7 @@
     function confirmReset() {
       if (!confirm('⚠️ 모든 지출 데이터가 삭제됩니다.\n정말 초기화하시겠습니까?')) return;
       if (!confirm('마지막 확인: 복구할 수 없습니다.')) return;
-      localStorage.removeItem(SK); localStorage.removeItem(SSK); indexedDB.deleteDatabase(DB_NAME); refreshAll(); toast('🗑 초기화 완료');
+      localStorage.removeItem(SK); localStorage.removeItem(SSK); if (db) { db.close(); db = null; } indexedDB.deleteDatabase(DB_NAME); refreshAll(); toast('🗑 초기화 완료');
     }
 
     function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2000); }
